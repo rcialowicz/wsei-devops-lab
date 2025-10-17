@@ -123,7 +123,7 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
 	- Uzupełnij tytuł i opis (krótko)
 	- Dodaj reviewera (rcialowicz@wsei.edu.pl)
 	- Naciśnij przycisk Create
-	- Poczekaj na build/validację (jeśli pipeline skonfigurowany), zaakceptuj i kliknij "Complete" / "Complete merge"
+	- Zaakceptuj i kliknij "Complete"
 
 7. Po zmergowaniu zaktualizuj local `main` i usuń gałąź
    ```
