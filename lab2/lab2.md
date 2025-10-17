@@ -19,7 +19,7 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
 
 
 ## 1. Stwórz repozytorium
-1. Otwórz stronę dev.azure.com/<nazwaorganizacji>
+1. Otwórz stronę dev.azure.com/*nazwaorganizacji*
 2. Otwórz projekt
 3. Po lewej z menu wybierz Repos
 4. Stwórz nowe repo z domyślnymi ustawieniami, nazwij je np. devops-lab2
@@ -77,11 +77,11 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
    dotnet new web -n MyApp
    dotnet sln add MyApp/MyApp.csproj
    ```
-5. Zweryfikuj poprawność operacji
+4. Zweryfikuj poprawność operacji
    ```
    dotnet build
    ```
-6. Popchnij swoje zmiany do zdalnego repozytorium
+5. Popchnij swoje zmiany do zdalnego repozytorium
    Przed pierwszym pushem możliwe, że będzie trzeba dokonać wstępnej konfiguracji
    ```
    git config --global user.name "Imie Nazwisko"
@@ -133,7 +133,7 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
    ```
 
 ### 3.3 Kontynuuj pracę z repozytorium
-Powtórz punkt 3.2. z inną dunkcjonalnością, tj.
+Powtórz punkt 3.2. z inną funkcjonalnością, tj.
 1. Stwórz dowolną funkcjonalność w odrębnej branchy
 2. Stwórz PR w Azure DevOps
 3. Dodaj rcialowicz@wsei.edu.pl jako reviewer
