@@ -132,6 +132,15 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
    git branch -d feature/tests-added
    ```
 
+### 3.3 Kontynuuj pracę z repozytorium
+Powtórz punkt 3.2. z inną dunkcjonalnością, tj.
+1. Stwórz dowolną funkcjonalność w odrębnej branchy
+2. Stwórz PR w Azure DevOps
+3. Dodaj rcialowicz@wsei.edu.pl jako reviewer
+4. Poczekaj na approve!
+5. Zmerguj PR
+
 Wymagane artefakty (do przesłania prowadzącemu):
 - URL repo (Azure DevOps)
-- Link do PR, który zmergowano
+- Link do PR
+- Approve prowadzącego w PR
