@@ -1,4 +1,4 @@
-# 🔹 Ćwiczenia krok po kroku
+# Laboratorium 1 – Wstęp do Azure
 
 ## Ćwiczenie 1 – Logowanie do Azure
 
