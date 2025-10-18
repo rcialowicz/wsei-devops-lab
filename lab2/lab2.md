@@ -101,6 +101,7 @@ Szczegółowe instrukcje (Windows/Linux/macOS, portable Git, conda, PAT Azure De
    ```
 2. Utwórz projekt testów xUnit
    ```
+   dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org
    cd MyApp
    dotnet new xunit -n MyApp.Tests
    dotnet sln add MyApp.Tests/MyApp.Tests.csproj
