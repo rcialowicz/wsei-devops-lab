@@ -126,4 +126,5 @@ Korzystamy z kontenera `customweb` utworzonego w ćwiczeniu 3. Nie tworzymy nowy
 
 ## Artefakty wymagane do zaliczenia
 - Zrzut ekrany zawierający działający kontener Nginx `customweb` z własnym `index.html`
-- Zrzut ekrany spersonalizowanej strony internetowej na publicznym IP (lub lokalnie)
+-- `docker ps -a`
+-- okno przeglądarki
