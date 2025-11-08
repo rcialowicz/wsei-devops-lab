@@ -5,7 +5,7 @@
 
 	```
 	ssh studentwsei@74.234.90.82 -p (50000 + N)
-    np. ssh studentwsei@74.234.90.82 -p 51023
+    np. ssh studentwsei@74.234.90.82 -p 50023
 	```
 
 ---
