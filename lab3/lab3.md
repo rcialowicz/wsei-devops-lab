@@ -48,11 +48,9 @@
 	```
 	docker ps
 	```
-4. Otwórz stronę w przeglądarce:
-	- http://localhost:8080
-
-5. (Środowisko zdalne / VM) Jeśli korzystasz z maszyny współdzielonej z numerem studenta `N`, i obowiązuje formuła portu `51000 + N`, otwórz:
-	- `http://<public_ip>:(51000 + N)`
+4. Otwórz stronę w przeglądarce (http://localhost:8080 jeśli pracujesz lokalnie)
+   (Środowisko zdalne / VM) Jeśli korzystasz z maszyny współdzielonej z numerem studenta `N`, i obowiązuje formuła portu `51000 + N`, otwórz:
+	- `http://74.234.90.82:(51000 + N)`
 
 ---
 
