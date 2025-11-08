@@ -4,8 +4,8 @@
 1. Połącz się z maszyną wirtualną używając użuywając ssh
 
 	```
-	ssh studentwsei@<public_ip> -p (50000 + N)
-    np. studentwsei@75.10.75.100 -p 51023
+	ssh studentwsei@74.234.90.82 -p (50000 + N)
+    np. ssh studentwsei@74.234.90.82 -p 51023
 	```
 
 ---
