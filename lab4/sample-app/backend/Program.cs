@@ -22,14 +22,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Initialize database on startup
+// Apply migrations on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Drop and recreate database (simple approach for demo)
-    dbContext.Database.EnsureDeleted();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 }
 
 app.UseCors("AllowAll");
