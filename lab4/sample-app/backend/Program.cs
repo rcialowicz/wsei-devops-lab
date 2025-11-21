@@ -43,8 +43,7 @@ app.MapGet("/api/products", async (AppDbContext db) =>
     var products = await db.Products.OrderByDescending(p => p.Id).ToListAsync();
     return Results.Ok(products);
 })
-.WithName("GetProducts")
-.WithOpenApi();
+.WithName("GetProducts");
 
 // POST endpoint - Add new product
 app.MapPost("/api/products", async (Product product, AppDbContext db) =>
@@ -60,8 +59,7 @@ app.MapPost("/api/products", async (Product product, AppDbContext db) =>
     
     return Results.Created($"/api/products/{product.Id}", product);
 })
-.WithName("AddProduct")
-.WithOpenApi();
+.WithName("AddProduct");
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
