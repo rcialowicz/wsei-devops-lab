@@ -26,7 +26,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    // Create database and tables if they don't exist
+    dbContext.Database.EnsureCreated();
 }
 
 app.UseCors("AllowAll");
