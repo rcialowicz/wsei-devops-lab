@@ -22,11 +22,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Apply migrations on startup
+// Initialize database on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // Create database and tables if they don't exist
+    
+    // Drop and recreate database (simple approach for demo)
+    dbContext.Database.EnsureDeleted();
     dbContext.Database.EnsureCreated();
 }
 
