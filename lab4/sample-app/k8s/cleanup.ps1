@@ -1,12 +1,12 @@
-# Product Manager - Kubernetes Cleanup Script
-# Usuwa aplikację i opcjonalnie klaster AKS
+# Kubernetes Demo - Cleanup Script
+# Removes demo application and optionally AKS cluster
 
 param(
     [Parameter(Mandatory=$false)]
-    [string]$ResourceGroupName = "product-manager-rg",
+    [string]$ResourceGroupName = "wsei-rg",
     
     [Parameter(Mandatory=$false)]
-    [string]$ClusterName = "product-manager-aks",
+    [string]$ClusterName = "wsei-aks",
     
     [Parameter(Mandatory=$false)]
     [switch]$DeleteCluster
@@ -14,45 +14,45 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Upewnij się że jesteśmy w katalogu k8s
+# Make sure we're in the k8s directory
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
 
 Write-Host "================================" -ForegroundColor Cyan
-Write-Host "Product Manager - K8s Cleanup" -ForegroundColor Cyan
+Write-Host "Kubernetes Demo - Cleanup" -ForegroundColor Cyan
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Usuń aplikację z namespace
-Write-Host "Usuwanie aplikacji Product Manager..." -ForegroundColor Yellow
-$namespace = kubectl get namespace product-manager 2>$null
+# Delete application from namespace
+Write-Host "Removing demo application..." -ForegroundColor Yellow
+$namespace = kubectl get namespace demo-app 2>$null
 if ($namespace) {
-    kubectl delete namespace product-manager
-    Write-Host "✓ Namespace 'product-manager' usunięty" -ForegroundColor Green
+    kubectl delete namespace demo-app
+    Write-Host "✓ Namespace 'demo-app' removed" -ForegroundColor Green
 } else {
-    Write-Host "Namespace 'product-manager' nie istnieje" -ForegroundColor Gray
+    Write-Host "Namespace 'demo-app' does not exist" -ForegroundColor Gray
 }
 Write-Host ""
 
 if ($DeleteCluster) {
-    Write-Host "Usuwanie klastra AKS i Resource Group..." -ForegroundColor Yellow
-    Write-Host "To może zająć kilka minut..." -ForegroundColor Gray
+    Write-Host "Removing AKS cluster and Resource Group..." -ForegroundColor Yellow
+    Write-Host "This may take a few minutes..." -ForegroundColor Gray
     
-    $confirmation = Read-Host "Czy na pewno chcesz usunąć CAŁY klaster '$ClusterName'? (yes/no)"
+    $confirmation = Read-Host "Are you sure you want to delete the ENTIRE cluster '$ClusterName'? (yes/no)"
     if ($confirmation -eq "yes") {
         az group delete --name $ResourceGroupName --yes --no-wait
-        Write-Host "✓ Rozpoczęto usuwanie Resource Group: $ResourceGroupName" -ForegroundColor Green
-        Write-Host "Proces działa w tle. Sprawdź status w Azure Portal." -ForegroundColor Gray
+        Write-Host "✓ Started removing Resource Group: $ResourceGroupName" -ForegroundColor Green
+        Write-Host "Process running in background. Check status in Azure Portal." -ForegroundColor Gray
     } else {
-        Write-Host "Anulowano usuwanie klastra" -ForegroundColor Yellow
+        Write-Host "Cluster deletion cancelled" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "Klaster AKS pozostawiony (użyj -DeleteCluster aby usunąć)" -ForegroundColor Gray
+    Write-Host "AKS cluster kept (use -DeleteCluster to remove)" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "Aby całkowicie usunąć klaster uruchom:" -ForegroundColor Yellow
+    Write-Host "To completely remove the cluster run:" -ForegroundColor Yellow
     Write-Host "  .\cleanup.ps1 -DeleteCluster -ResourceGroupName $ResourceGroupName" -ForegroundColor Gray
 }
 
 Write-Host ""
-Write-Host "✓ Cleanup zakończony" -ForegroundColor Green
+Write-Host "✓ Cleanup completed" -ForegroundColor Green
 Write-Host ""
