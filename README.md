@@ -9,7 +9,7 @@ Znajdziesz tutaj przykładowe zadania krok po kroku, skrypty PowerShell oraz kr�
 1. 04/10/2025 — Wprowadzenie do platform Azure Portal i Azure DevOps - [lab1.md](lab1/lab1.md)
 2. 18/10/2025 — Linux i git - [lab2.md](lab2/lab2.md)
 3. 08/11/2025 — Docker - [lab3.md](lab3/lab3.md)
-4. 22/11/2025 — Docker c.d.
-5. 06/12/2025 — tbd
-6. 20/12/2025 — (remote) tbd
+4. 22/11/2025 — Docker Compose - [lab4.md](lab4/lab4.md)
+5. 06/12/2025 — CI
+6. 20/12/2025 — CD
 7. 10/01/2026 — tbd
