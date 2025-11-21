@@ -159,32 +159,12 @@
             margin-bottom: 20px;
             border: 1px solid #c3e6cb;
         }
-        
-        .api-status {
-            text-align: center;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        
-        .api-status.connected {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .api-status.disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🛍️ Product Manager</h1>
-        <p class="subtitle">Laboratorium 4 - Docker Compose</p>
         
-        <div id="apiStatus" class="api-status"></div>
         <div id="message"></div>
         
         <div class="form-section">
@@ -213,23 +193,6 @@
         const productNameInput = document.getElementById('productName');
         const productsContainer = document.getElementById('productsContainer');
         const messageDiv = document.getElementById('message');
-        const apiStatusDiv = document.getElementById('apiStatus');
-
-        // Check API connection
-        async function checkApiConnection() {
-            try {
-                const response = await fetch(`${API_URL.replace('/api', '')}/health`);
-                if (response.ok) {
-                    apiStatusDiv.className = 'api-status connected';
-                    apiStatusDiv.textContent = '✅ Connected to Backend API';
-                    return true;
-                }
-            } catch (error) {
-                apiStatusDiv.className = 'api-status disconnected';
-                apiStatusDiv.textContent = '❌ Cannot connect to Backend API';
-                return false;
-            }
-        }
 
         // Show message
         function showMessage(text, type = 'success') {
@@ -318,11 +281,7 @@
         });
 
         // Initialize
-        checkApiConnection().then(connected => {
-            if (connected) {
-                loadProducts();
-            }
-        });
+        loadProducts();
 
         // Refresh products every 5 seconds
         setInterval(loadProducts, 5000);

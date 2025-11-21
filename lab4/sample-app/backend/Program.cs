@@ -22,11 +22,12 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Apply migrations on startup
+// Initialize database on startup
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    // Simple approach: ensure database and tables exist
+    dbContext.Database.EnsureCreated();
 }
 
 app.UseCors("AllowAll");
