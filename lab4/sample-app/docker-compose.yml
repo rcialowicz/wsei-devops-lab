@@ -6,22 +6,23 @@ services:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=YourStrong@Passw0rd
       - MSSQL_PID=Express
-    ports:
-      - "1433:1433"
 
   # Backend API
   backend:
     build: ./backend
-    ports:
-      - "8081:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=db;Database=ProductsDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
-    restart: always
 
   # Frontend
   frontend:
     build: ./frontend
+
+  # Gateway (Reverse Proxy)
+  gateway:
+    build: ./gateway
     ports:
       - "8080:80"
-    restart: always
+    depends_on:
+      - frontend
+      - backend
