@@ -1,0 +1,25 @@
+services:
+  # SQL Server Database
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+
+  # Backend API
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ProductsDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "8081:80"

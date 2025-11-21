@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Manager - Lab 4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        label {
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .products-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .products-list {
+            list-style: none;
+        }
+        
+        .product-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .product-item:hover {
+            transform: translateX(5px);
+            background: #e9ecef;
+        }
+        
+        .product-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .product-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .api-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Product Manager</h1>
+        <p class="subtitle">Laboratorium 4 - Docker Compose</p>
+        
+        <div id="apiStatus" class="api-status"></div>
+        <div id="message"></div>
+        
+        <div class="form-section">
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="productName">Product Name:</label>
+                    <input type="text" id="productName" name="productName" required placeholder="Enter product name...">
+                    <button type="submit">Add Product</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="products-section">
+            <h2>📦 Products List</h2>
+            <div id="productsContainer">
+                <div class="loading">Loading products...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8080/api' 
+            : `http://${window.location.hostname}:8080/api`;
+        
+        const form = document.getElementById('productForm');
+        const productNameInput = document.getElementById('productName');
+        const productsContainer = document.getElementById('productsContainer');
+        const messageDiv = document.getElementById('message');
+        const apiStatusDiv = document.getElementById('apiStatus');
+
+        // Check API connection
+        async function checkApiConnection() {
+            try {
+                const response = await fetch(`${API_URL.replace('/api', '')}/health`);
+                if (response.ok) {
+                    apiStatusDiv.className = 'api-status connected';
+                    apiStatusDiv.textContent = '✅ Connected to Backend API';
+                    return true;
+                }
+            } catch (error) {
+                apiStatusDiv.className = 'api-status disconnected';
+                apiStatusDiv.textContent = '❌ Cannot connect to Backend API';
+                return false;
+            }
+        }
+
+        // Show message
+        function showMessage(text, type = 'success') {
+            messageDiv.className = type;
+            messageDiv.textContent = text;
+            setTimeout(() => {
+                messageDiv.className = '';
+                messageDiv.textContent = '';
+            }, 3000);
+        }
+
+        // Load products
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                if (!response.ok) throw new Error('Failed to fetch products');
+                
+                const products = await response.json();
+                displayProducts(products);
+            } catch (error) {
+                productsContainer.innerHTML = `
+                    <div class="error">
+                        Failed to load products. Make sure the backend is running.
+                    </div>
+                `;
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+            if (products.length === 0) {
+                productsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>No products yet. Add your first product above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const productsList = products.map(product => {
+                const date = new Date(product.createdAt);
+                const formattedDate = date.toLocaleString('pl-PL');
+                
+                return `
+                    <li class="product-item">
+                        <span class="product-name">${escapeHtml(product.name)}</span>
+                        <span class="product-date">${formattedDate}</span>
+                    </li>
+                `;
+            }).join('');
+
+            productsContainer.innerHTML = `<ul class="products-list">${productsList}</ul>`;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const productName = productNameInput.value.trim();
+            if (!productName) return;
+
+            try {
+                const response = await fetch(`${API_URL}/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: productName })
+                });
+
+                if (!response.ok) throw new Error('Failed to add product');
+
+                showMessage('✅ Product added successfully!', 'success');
+                productNameInput.value = '';
+                loadProducts();
+            } catch (error) {
+                showMessage('❌ Failed to add product. Please try again.', 'error');
+            }
+        });
+
+        // Initialize
+        checkApiConnection().then(connected => {
+            if (connected) {
+                loadProducts();
+            }
+        });
+
+        // Refresh products every 5 seconds
+        setInterval(loadProducts, 5000);
+    </script>
+</body>
+</html>
