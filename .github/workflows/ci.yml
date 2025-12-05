@@ -44,6 +44,8 @@ jobs:
       run: |
         cd lab5/sample-ci/backend
         dotnet build --configuration Release
+        cd ProductApi.Tests
+        dotnet build --configuration Release
 
   backend-test:
     name: Backend - Test
@@ -66,13 +68,16 @@ jobs:
       run: |
         cd lab5/sample-ci/backend
         dotnet build --configuration Release
+
+    - name: Build Test
+      run: |
+        cd ProductApi.Tests
+        dotnet build --configuration Release
     
     - name: Test
       run: |
-        cd lab5/sample-ci/backend
-        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
-          --configuration Release \
-          --logger trx
+        cd lab5/sample-ci/backend/ProductApi.Tests
+        dotnet test --configuration Release --logger trx
 
   backend-publish:
     name: Backend - Publish
