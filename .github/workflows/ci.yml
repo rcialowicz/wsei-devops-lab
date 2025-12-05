@@ -79,6 +79,15 @@ jobs:
       run: |
         cd lab5/sample-ci/backend/ProductApi.Tests
         dotnet test --configuration Release --logger trx
+    
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Backend Tests (.NET)
+        path: '**/TestResults/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: false
 
   backend-publish:
     name: Backend - Publish
