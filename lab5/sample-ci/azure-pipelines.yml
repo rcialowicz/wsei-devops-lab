@@ -1,0 +1,182 @@
+# Azure Pipelines CI
+# UWAGA: Ten pipeline jest celowo NIEOPTYMALIZOWANY!
+# Zadanie dla studentów: zoptymalizuj go, aby skrócić czas buildu
+
+trigger:
+  branches:
+    include:
+    - main
+
+pool:
+  vmImage: 'windows-latest'  # Windows agent - wolniejszy niż Linux
+
+# Etapy pipeline
+stages:
+# Etap 1: Backend .NET
+- stage: BackendBuild
+  displayName: 'Backend Build'
+  jobs:
+  - job: DotNetRestore
+    displayName: 'Restore .NET dependencies'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+    
+    # PROBLEM: Restore bez cache
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet restore
+      displayName: 'Restore dependencies'
+  
+  - job: DotNetBuild
+    displayName: 'Build .NET application'
+    dependsOn: DotNetRestore
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+    
+    # PROBLEM: Ponowny restore (bo to nowy job)
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet restore
+      displayName: 'Restore dependencies again'
+    
+    # Build
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet build --configuration Release
+      displayName: 'Build application'
+  
+  - job: DotNetTest
+    displayName: 'Test .NET application'
+    dependsOn: DotNetBuild
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+    
+    # PROBLEM: Jeszcze raz restore i build
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet restore
+        dotnet build --configuration Release
+      displayName: 'Restore and build again'
+    
+    # Testy
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
+          --configuration Release \
+          --logger trx
+      displayName: 'Run unit tests'
+    
+    - task: PublishTestResults@2
+      displayName: 'Publish test results'
+      condition: always()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/TestResults/*.trx'
+  
+  - job: DotNetPublish
+    displayName: 'Publish .NET artifacts'
+    dependsOn: DotNetTest
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+    
+    # PROBLEM: Wszystko od nowa
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet restore
+        dotnet build --configuration Release
+      displayName: 'Restore and build once more'
+    
+    # Publish
+    - script: |
+        cd lab5/sample-ci/backend
+        dotnet publish --configuration Release --output $(Build.ArtifactStagingDirectory)/backend
+      displayName: 'Publish artifacts'
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend'
+        ArtifactName: 'backend'
+
+# Etap 2: Frontend Node.js
+- stage: FrontendBuild
+  displayName: 'Frontend Build'
+  dependsOn: []  # Może działać równolegle z Backend
+  jobs:
+  - job: NpmInstall
+    displayName: 'Install npm packages'
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '20.x'
+    
+    # PROBLEM: npm install bez cache
+    - script: |
+        cd lab5/sample-ci/frontend
+        npm install
+      displayName: 'npm install'
+  
+  - job: NpmTest
+    displayName: 'Run npm tests'
+    dependsOn: NpmInstall
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '20.x'
+    
+    # PROBLEM: Ponowne npm install (bo nowy job)
+    - script: |
+        cd lab5/sample-ci/frontend
+        npm install
+      displayName: 'npm install again'
+    
+    # Testy
+    - script: |
+        cd lab5/sample-ci/frontend
+        npm test
+      displayName: 'Run tests'
+  
+  - job: NpmBuild
+    displayName: 'Build frontend'
+    dependsOn: NpmTest
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '20.x'
+    
+    # PROBLEM: I znowu npm install...
+    - script: |
+        cd lab5/sample-ci/frontend
+        npm install
+      displayName: 'npm install one more time'
+    
+    # Build
+    - script: |
+        cd lab5/sample-ci/frontend
+        npm run build
+      displayName: 'Build frontend'
+    
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload artifacts'
+      inputs:
+        PathtoPublish: 'lab5/sample-ci/frontend/dist'
+        ArtifactName: 'frontend'
