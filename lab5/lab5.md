@@ -303,7 +303,6 @@ Prześlij prowadzącemu:
 2. **Link do Pull Request** w GitHub:
    - PR z feature brancha do main
    - Workflow **CI - Optimized** przeszedł ✅ (wszystkie checks zielone)
-   - Approve prowadzącego (rcialowicz)
    - PR zmergowany
 
 3. **Krótki opis optymalizacji** (2-3 zdania):
