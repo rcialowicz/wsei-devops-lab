@@ -1,498 +1,212 @@
 # Laboratorium 5 – Continuous Integration (CI)
 
 ## Prerekwizyty
-1. Konto Azure DevOps (https://dev.azure.com)
-2. Konto GitHub (opcjonalnie, dla ćwiczenia z GitHub Actions)
-3. Azure CLI zainstalowane lokalnie
-4. Git zainstalowany lokalnie
-5. .NET 8 SDK i Node.js 20 zainstalowane lokalnie (do testowania lokalnie)
+1. **Konto GitHub** (https://github.com/signup) - **WYMAGANE**
+2. Git zainstalowany lokalnie
+3. .NET 8 SDK i Node.js 20 zainstalowane lokalnie (do testowania lokalnie)
+4. Edytor kodu (VS Code, Visual Studio, lub inny)
+
+> **Uwaga:** W tym laboratorium używamy **GitHub Actions** jako platformy CI/CD. Azure DevOps wymaga approval dla Microsoft-hosted agents w free tier, dlatego koncentrujemy się na GitHub.
 
 ---
 
 ## Przygotowanie
 
-### 0.1 Sklonuj repozytorium z materiałami
+### 0.1 Załóż konto GitHub (jeśli nie masz)
+
+1. Przejdź do https://github.com/signup
+2. Wprowadź email, hasło, username
+3. Zweryfikuj email
+4. Wybierz **Free plan**
+
+### 0.2 Stwórz fork repozytorium na GitHub
+
+1. Otwórz https://github.com/rcialowicz/wsei-devops-lab
+2. Kliknij **Fork** (prawy górny róg)
+3. Stwórz fork w swoim koncie GitHub
+4. Poczekaj aż fork się utworzy
+
+### 0.3 Sklonuj swojego forka lokalnie
+
 ```powershell
 cd ~
-git clone https://github.com/rcialowicz/wsei-devops-lab.git
+git clone https://github.com/<twoj-username>/wsei-devops-lab.git
 cd wsei-devops-lab/lab5/sample-ci
 ```
 
-Lub jeśli już masz repo sklonowane, upewnij się że masz najnowszą wersję:
-```powershell
-cd ~/wsei-devops-lab
-git pull origin main
-cd lab5/sample-ci
-```
+Zastąp `<twoj-username>` swoim username na GitHub.
 
-### 0.2 Struktura projektu
+### 0.4 Struktura projektu
 ```
-sample-ci/
-├── backend/                    # Backend API (.NET 8)
-│   ├── Program.cs             # Główna aplikacja
-│   ├── ProductApi.csproj      # Plik projektu
-│   └── ProductApi.Tests/      # Testy jednostkowe
-│       ├── ProductApi.Tests.csproj
-│       └── ProductTests.cs
-├── frontend/                   # Frontend (HTML/JS)
-│   ├── index.html             # Strona główna
-│   ├── app.js                 # Logika aplikacji
-│   ├── package.json           # Zależności npm
-│   └── app.test.js            # Testy jednostkowe
-├── azure-pipelines.yml        # Pipeline Azure DevOps
-└── .github/workflows/ci.yml   # Workflow GitHub Actions
+wsei-devops-lab/
+├── .github/workflows/
+│   ├── ci.yml                 # Workflow GitHub Actions (NIEOPTYMALIZOWANY)
+│   └── ci-optimized.yml       # Workflow zoptymalizowany
+└── lab5/sample-ci/
+    ├── backend/                # Backend API (.NET 8)
+    │   ├── Program.cs
+    │   ├── ProductApi.csproj
+    │   └── ProductApi.Tests/
+    └── frontend/               # Frontend (HTML/JS)
+        ├── index.html
+        ├── app.js
+        ├── package.json
+        └── app.test.js
 ```
 
 ---
 
-## Ćwiczenie 1 – Stworzenie pipeline CI w Azure DevOps
+## Ćwiczenie 1 – Uruchomienie nieoptymalizowanego workflow CI
 
-W tym ćwiczeniu stworzysz pipeline CI w Azure DevOps, który automatycznie zbuduje i przetestuje backend (.NET) oraz frontend (Node.js) przy każdym push do brancha `main`.
+W tym ćwiczeniu uruchomisz workflow GitHub Actions, który automatycznie zbuduje i przetestuje backend (.NET) oraz frontend (Node.js) przy każdym push do brancha `main`.
 
-**UWAGA:** Pipeline jest celowo **NIEOPTYMALIZOWANY** - Twoje zadanie w dalszej części to go zoptymalizować!
+**UWAGA:** Workflow jest celowo **NIEOPTYMALIZOWANY** - Twoje zadanie w dalszej części to go zoptymalizować!
 
-### 1.1 Stwórz nowe repozytorium w Azure DevOps
+### 1.1 Przejrzyj plik .github/workflows/ci.yml
 
-1. Zaloguj się do https://dev.azure.com
-2. Otwórz swój projekt (lub stwórz nowy: `wsei-devops-ci`)
-3. Przejdź do **Repos** → **Files**
-4. Kliknij **Import repository**
-5. Wklej URL: `https://github.com/rcialowicz/wsei-devops-lab.git`
-6. Kliknij **Import**
-
-### 1.2 Przejrzyj plik azure-pipelines.yml
-
-W repozytorium znajduje się plik `lab5/sample-ci/azure-pipelines.yml`. Otwórz go i zauważ problemy:
-
+W swoim sklonowanym repozytorium otwórz plik `lab5/sample-ci/.github/workflows/ci.yml`. Zauważ problemy:
+.github/workflows/ci.yml` (w root repozytorium)
 **Problemy do znalezienia:**
-- ❌ Każdy job instaluje .NET SDK od nowa
+- ❌ Backend ma 4 osobne jobs (restore, build, test, publish) - wszystkie **sekwencyjne**
 - ❌ Każdy job robi `dotnet restore` od nowa (brak cache)
-- ❌ Jobs są sekwencyjne zamiast równoległych
 - ❌ Build jest powtarzany w wielu job'ach
-- ❌ To samo dla frontend (npm install powtarzany wielokrotnie)
+- ❌ Frontend ma 3 osobne jobs (install, test, build) - też **sekwencyjne**
+- ❌ Każdy job robi `npm install` od nowa (brak cache)
+- ❌ Backend i frontend czekają na siebie (needs), mimo że mogłyby działać równolegle
 
 **Przeczytaj komentarze w YAML - są oznaczone jako `# PROBLEM:`**
 
-### 1.3 Stwórz pipeline w Azure DevOps
+### 1.2 Push do swojego forka aby uruchomić workflow
 
-1. Przejdź do **Pipelines** → **Pipelines**
-2. Kliknij **New pipeline**
-3. Wybierz **Azure Repos Git**
-4. Wybierz swoje repozytorium
-5. Wybierz **Existing Azure Pipelines YAML file**
-6. Path: `/lab5/sample-ci/azure-pipelines.yml`
-7. Kliknij **Continue**
-8. Przejrzyj YAML i kliknij **Run**
+Workflow uruchomi się automatycznie przy push do `main`. Zróbmy małą zmianę:
 
-### 1.4 Obserwuj (wolne) wykonanie pipeline
+```powershell
+cd ~/wsei-devops-lab
+git checkout main
+echo "# Lab 5 - CI Optimization" >> lab5/sample-ci/README.md
+git add .
+git commit -m "Trigger CI workflow"
+git push origin main
+```
 
-Pipeline powinien się uruchomić automatycznie. Obserwuj logi i **mierz czas**:
+### 1.3 Obserwuj (wolne) wykonanie workflow
 
-1. Kliknij na uruchomiony pipeline
-2. Zobacz etapy: **BackendBuild** i **FrontendBuild** (działają równolegle ✅)
-3. W **BackendBuild** zobacz joby: DotNetRestore → DotNetBuild → DotNetTest → DotNetPublish (wszystkie **sekwencyjne** ❌)
-4. W **FrontendBuild** zobacz joby: NpmInstall → NpmTest → NpmBuild (też **sekwencyjne** ❌)
+1. Otwórz swoje repo na GitHub: `https://github.com/<twoj-username>/wsei-devops-lab`
+2. Przejdź do zakładki **Actions**
+3. Zobaczysz workflow **CI** - kliknij na ostatni run
+4. Zobacz jobs:
+   - **backend-restore** → **backend-build** → **backend-test** → **backend-publish** (wszystkie **sekwencyjne** ❌)
+   - **frontend-install** → **frontend-test** → **frontend-build** (też **sekwencyjne** ❌)
+   - Backend i Frontend czekają na siebie mimo że mogłyby działać równolegle ❌
 
-**Zapisz całkowity czas wykonania pipeline** - będziesz go porównywać po optymalizacji!
+**Zapisz całkowity czas wykonania workflow** - będziesz go porównywać po optymalizacji!
 
-### 1.5 Przeanalizuj logi
+### 1.4 Przeanalizuj logi
 
 Kliknij na każdy job i zobacz logi:
 
-- Czy `.NET SDK` jest instalowany wielokrotnie?
+- Czy `.NET SDK` / `Node.js` jest setupowane wielokrotnie?
 - Czy `dotnet restore` / `npm install` jest wykonywany wielokrotnie?
 - Ile czasu zajmuje każda operacja?
+- Czy widzisz "Cache restored" gdziekolwiek? (Nie - brak cache! ❌)
 
 **Zrób zrzut ekranu pokazujący czasy poszczególnych jobs.**
 
 ---
 
-## Ćwiczenie 2 – Optymalizacja pipeline (Azure DevOps)
+## Ćwiczenie 2 – Optymalizacja workflow (GitHub Actions)
 
-W tym ćwiczeniu zoptymalizujesz pipeline, aby był **znacznie szybszy**. Zastosujesz najlepsze praktyki CI/CD.
+W tym ćwiczeniu zoptymalizujesz workflow, aby był **znacznie szybszy**. Zastosujesz najlepsze praktyki CI/CD.
 
 ### 2.1 Analiza problemów
 
-Pipeline z Ćwiczenia 1 ma następujące problemy:
+Workflow z Ćwiczenia 1 ma następujące problemy:
 
-1. **Jobs są sekwencyjne** - restore → build → test → publish wykonują się kolejno
-2. **Brak cache** - każdy job instaluje .NET SDK i robi `dotnet restore` od nowa
-3. **Powtarzanie operacji** - `dotnet build` jest wykonywany w każdym job
-4. **Brak optymalizacji .NET** - nie używamy flag `--no-restore`, `--no-build`
+1. **Jobs są sekwencyjne** - backend jobs czekają na siebie, frontend jobs czekają na siebie
+2. **Backend i frontend czekają na siebie** - mimo że mogłyby działać równolegle
+3. **Brak cache** - każdy job robi `dotnet restore` / `npm install` od nowa
+4. **Powtarzanie operacji** - `dotnet build` jest wykonywany w każdym job
+5. **Brak optymalizacji** - nie używamy flag `--no-restore`, `--no-build`, `npm ci`
 
 **Twoje zadanie:** Napraw te problemy!
 
-### 2.2 Optymalizacja #1: Połącz jobs w jeden
+### 2.2 Stwórz zoptymalizowany workflow
 
-Zamiast 4 jobs (restore, build, test, publish), zrób **jeden job** który wykonuje wszystko sekwencyjnie:
-
-1. W Azure DevOps, przejdź do **Repos** → **Files**
-2. Otwórz `lab5/sample-ci/azure-pipelines.yml`
-3. Kliknij **Edit**
-4. Zastąp stage `BackendBuild` następującym kodem:
-
-```yaml
-# Etap 1: Backend .NET (ZOPTYMALIZOWANY)
-- stage: BackendBuild
-  displayName: 'Backend Build'
-  jobs:
-  - job: BackendJob
-    displayName: 'Build, Test and Publish Backend'
-    steps:
-    # Zainstaluj .NET SDK (tylko raz!)
-    - task: UseDotNet@2
-      displayName: 'Install .NET 8 SDK'
-      inputs:
-        packageType: 'sdk'
-        version: '8.x'
-    
-    # Restore (tylko raz!)
-    - script: |
-        cd lab5/sample-ci/backend
-        dotnet restore
-      displayName: 'Restore dependencies'
-    
-    # Build (tylko raz!)
-    - script: |
-        cd lab5/sample-ci/backend
-        dotnet build --configuration Release --no-restore
-      displayName: 'Build application'
-    
-    # Test (używa już zbudowanej aplikacji)
-    - script: |
-        cd lab5/sample-ci/backend
-        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
-          --configuration Release \
-          --no-build \
-          --logger trx
-      displayName: 'Run unit tests'
-    
-    - task: PublishTestResults@2
-      displayName: 'Publish test results'
-      condition: always()
-      inputs:
-        testResultsFormat: 'VSTest'
-        testResultsFiles: '**/TestResults/*.trx'
-    
-    # Publish (używa już zbudowanej aplikacji)
-    - script: |
-        cd lab5/sample-ci/backend
-        dotnet publish --configuration Release --no-build --output $(Build.ArtifactStagingDirectory)/backend
-      displayName: 'Publish artifacts'
-    
-    - task: PublishBuildArtifacts@1
-      displayName: 'Upload artifacts'
-      inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend'
-        ArtifactName: 'backend'
-```
-
-5. **Analogicznie zoptymalizuj stage `FrontendBuild`** - połącz 3 jobs w jeden!
-
-### 2.3 Optymalizacja #2: Dodaj cache
-
-Dodaj cache dla NuGet packages i node_modules:
-
-**Dla backendu (przed `dotnet restore`):**
-```yaml
-    # Cache dla NuGet packages
-    - task: Cache@2
-      displayName: 'Cache NuGet packages'
-      inputs:
-        key: 'nuget | "$(Agent.OS)" | lab5/sample-ci/backend/**/packages.lock.json,lab5/sample-ci/backend/**/*.csproj'
-        path: '$(NUGET_PACKAGES)'
-        restoreKeys: |
-          nuget | "$(Agent.OS)"
-```
-
-**Dla frontendu (przed `npm install`):**
-```yaml
-    # Cache dla node_modules
-    - task: Cache@2
-      displayName: 'Cache node_modules'
-      inputs:
-        key: 'npm | "$(Agent.OS)" | lab5/sample-ci/frontend/package-lock.json'
-        path: 'lab5/sample-ci/frontend/node_modules'
-        restoreKeys: |
-          npm | "$(Agent.OS)"
-```
-
-### 2.4 Uruchom zoptymalizowany pipeline
-
-1. Kliknij **Commit**
-2. Pipeline uruchomi się automatycznie
-3. **Zmierz nowy czas wykonania** i porównaj z poprzednim!
-
-**Oczekiwany wynik:**
-- ✅ Czas buildu skrócony o 50-70%
-- ✅ Cache działa (zobacz "Cache hit" w logach)
-- ✅ Jobs są krótsze i prostsze
-
-### 2.5 Przetestuj cache
-
-1. Uruchom pipeline ponownie (bez zmian w kodzie)
-2. Zobacz logi task'a **Cache** - powinno być "Cache restored" ✅
-3. Zauważ że `dotnet restore` i `npm install` są **znacznie szybsze**
-
-### 2.6 (Opcjonalnie) Dodaj parallel jobs
-
-Jeśli masz więcej testów, możesz je uruchomić równolegle:
-
-```yaml
-    strategy:
-      matrix:
-        unit_tests:
-          testProject: 'ProductApi.Tests'
-        integration_tests:
-          testProject: 'ProductApi.IntegrationTests'
-```
-
----
-
-## Ćwiczenie 3 – GitHub Actions i optymalizacja
-
-W tym ćwiczeniu stworzysz workflow GitHub Actions i od razu go zoptymalizujesz, stosując najlepsze praktyki.
-
-### 3.1 Stwórz fork repozytorium na GitHub
-
-1. Otwórz https://github.com/rcialowicz/wsei-devops-lab
-2. Kliknij **Fork** (prawy górny róg)
-3. Stwórz fork w swoim koncie GitHub
-
-### 3.2 Sklonuj swojego forka lokalnie
+W swoim repozytorium już jest plik `.github/workflows/ci-optimized.yml` (w root repozytorium) - to wzorcowa implementacja. Przejrzyj go:
 
 ```powershell
-cd ~
-git clone https://github.com/<twoj-username>/wsei-devops-lab.git
-cd wsei-devops-lab
-```
-
-### 3.3 Przeanalizuj nieoptymalizowany workflow
-
-Otwórz plik `lab5/sample-ci/.github/workflows/ci.yml` i znajdź problemy:
-
-- ❌ Każdy job setup'uje .NET/Node od nowa
-- ❌ Każdy job robi restore/install od nowa
-- ❌ Jobs są sekwencyjne (czekają na siebie)
-- ❌ Brak cache dla dependencies
-
-### 3.4 Stwórz zoptymalizowany workflow
-
-Stwórz nowy plik `.github/workflows/ci-optimized.yml`:
-
-```yaml
-name: CI (Optimized)
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  # Backend - wszystko w jednym job
-  backend:
-    name: Backend (.NET)
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-    
-    # Cache dla NuGet packages
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    
-    - name: Restore
-      run: |
-        cd lab5/sample-ci/backend
-        dotnet restore
-    
-    - name: Build
-      run: |
-        cd lab5/sample-ci/backend
-        dotnet build --configuration Release --no-restore
-    
-    - name: Test
-      run: |
-        cd lab5/sample-ci/backend
-        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
-          --configuration Release \
-          --no-build \
-          --logger trx
-    
-    - name: Publish test results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: always()
-      with:
-        files: '**/TestResults/*.trx'
-    
-    - name: Publish artifacts
-      run: |
-        cd lab5/sample-ci/backend
-        dotnet publish --configuration Release --no-build --output ./publish
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: backend
-        path: lab5/sample-ci/backend/publish
-
-  # Frontend - wszystko w jednym job (równolegle z backend!)
-  frontend:
-    name: Frontend (Node.js)
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: 'lab5/sample-ci/frontend/package-lock.json'
-    
-    - name: Install dependencies
-      run: |
-        cd lab5/sample-ci/frontend
-        npm ci  # Szybsze niż npm install!
-    
-    - name: Run tests
-      run: |
-        cd lab5/sample-ci/frontend
-        npm test
-    
-    - name: Build
-      run: |
-        cd lab5/sample-ci/frontend
-        npm run build
-    
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend
-        path: lab5/sample-ci/frontend/dist
+cd ~/wsei-devops-lab
+cat .github/workflows/ci-optimized.yml
 ```
 
 **Zaobserwuj optymalizacje:**
-- ✅ Backend i frontend działają **równolegle** (brak `needs`)
-- ✅ Każdy komponent ma **jeden job** zamiast wielu
-- ✅ **Cache** dla NuGet i npm (actions/cache + setup-node cache)
+- ✅ Backend i frontend działają **równolegle** (brak `needs` między nimi)
+- ✅ Każdy komponent ma **jeden job** zamiast wielu (wszystkie kroki w jednym miejscu)
+- ✅ **Cache** dla NuGet packages (`actions/cache`) i node_modules (built-in w `setup-node`)
 - ✅ Używamy `--no-restore`, `--no-build` w .NET
 - ✅ Używamy `npm ci` zamiast `npm install` (szybsze w CI)
 
-### 3.5 Commit i push
+### 2.3 Uruchom zoptymalizowany workflow
 
-```powershell
-git add .github/workflows/ci-optimized.yml
-git commit -m "Add optimized CI workflow"
-git push origin main
-```
-
-### 3.6 Porównaj czas wykonania
-
-1. Otwórz swoje repo na GitHub: `https://github.com/<twoj-username>/wsei-devops-lab`
-2. Przejdź do zakładki **Actions**
-3. Zobaczysz dwa workflows: **CI** (wolny) i **CI (Optimized)** (szybki)
-4. Porównaj czas wykonania obu!
-
-**Oczekiwany wynik:**
-- **CI (wolny):** ~5-10 minut
-- **CI (Optimized):** ~2-3 minuty
-
-### 3.7 (Opcjonalnie) Matrix builds
-
-Jeśli chcesz testować na wielu wersjach Node.js:
-
-```yaml
-  frontend:
-    name: Frontend (Node.js)
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: 'lab5/sample-ci/frontend/package-lock.json'
-    # ... reszta steps
-```
-
----
-
-## Ćwiczenie 4 – Branch policies i Pull Request validation
-
-W tym ćwiczeniu skonfigurujesz branch protection, aby wymagać przejścia zoptymalizowanego pipeline CI przed merge'em.
-
-### 4.1 (Azure DevOps) Skonfiguruj branch policy
-
-1. W Azure DevOps, przejdź do **Repos** → **Branches**
-2. Znajdź branch `main` i kliknij ikonę **...** (więcej opcji) → **Branch policies**
-3. W sekcji **Build Validation** kliknij **+** (Add)
-4. Wybierz swój pipeline (azure-pipelines.yml - zoptymalizowany)
-5. **Build expiration:** Immediately
-6. ✅ **Policy requirement:** Required
-7. Kliknij **Save**
-8. W sekcji **Require a minimum number of reviewers:**
-   - ✅ **Require a minimum number of reviewers:** 1
-   - Kliknij **Save**
-
-### 4.2 Przetestuj branch policy – stwórz Pull Request
-
-1. Lokalnie stwórz nowy branch:
-
-```powershell
-git checkout -b feature/improve-ui
-```
-
-2. Zmień coś w frontend (np. dodaj style w `lab5/sample-ci/frontend/index.html`):
-
-```html
-<style>
-    /* ...istniejące style... */
-    .container {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Zmiana z 4px na 8px */
-    }
-</style>
-```
-
-3. Commit i push:
+Workflow `ci-optimized.yml` uruchomi się automatycznie przy każdym pushu. Zróbmy push:
 
 ```powershell
 git add .
-git commit -m "Improve UI shadow"
-git push -u origin feature/improve-ui
+git commit -m "Add optimized workflow" --allow-empty
+git push origin main
 ```
 
-4. W Azure DevOps, przejdź do **Repos** → **Pull requests**
-5. Kliknij **New pull request**
-6. Source: `feature/improve-ui` → Target: `main`
-7. Wypełnij tytuł i opis, kliknij **Create**
-8. Zauważ, że PR jest blokowany – pipeline CI (zoptymalizowany) musi przejść ✅
-9. Pipeline uruchomi się automatycznie – poczekaj na sukces
-10. Dodaj rcialowicz@wsei.edu.pl jako **Reviewer**
-11. Po approve prowadzącego, zmerguj PR (**Complete**)
+### 2.4 Porównaj czasy wykonania
 
-### 4.3 (GitHub) Skonfiguruj branch protection
+1. Otwórz swoje repo na GitHub: `https://github.com/<twoj-username>/wsei-devops-lab`
+2. Przejdź do zakładki **Actions**
+3. Zobaczysz dwa workflows:
+   - **CI** (wolny, nieoptymalizowany)
+   - **CI - Optimized** (szybki, zoptymalizowany)
+4. Kliknij na ostatni run workflow **CI - Optimized**
+5. **Zmierz czas wykonania** i porównaj z workflow **CI**!
+
+**Oczekiwany wynik:**
+- ✅ Czas buildu skrócony o 40-60%
+- ✅ Cache działa (zobacz "Cache restored" w logach Setup .NET i Setup Node.js)
+- ✅ Backend i Frontend działają równolegle
+- ✅ Jobs są krótsze i prostsze (jeden job na komponent)
+
+**Zrób zrzut ekranu porównujący czasy obu workflows.**
+
+### 2.5 Przetestuj cache
+
+1. Uruchom workflow ponownie (bez zmian w kodzie):
+
+```powershell
+git commit -m "Test cache" --allow-empty
+git push origin main
+```
+
+2. Zobacz logi **CI - Optimized** workflow:
+   - W kroku **Setup .NET** → **Cache NuGet packages** powinno być "Cache hit" ✅
+   - W kroku **Setup Node.js** powinno być "Cache restored" ✅
+3. Zauważ że `dotnet restore` i `npm ci` są **znacznie szybsze** (pomijają download)
+
+### 2.6 (Opcjonalnie) Stwórz własną optymalizację
+
+Zamiast używać gotowego `ci-optimized.yml`, możesz samodzielnie zoptymalizować `ci.yml`:
+
+1. Skopiuj `.github/workflows/ci.yml` do `.github/workflows/ci-my-optimization.yml`
+2. Połącz backend jobs w jeden (wszystkie kroki w `backend` job)
+3. Połącz frontend jobs w jeden (wszystkie kroki w `frontend` job)
+4. Usuń `needs` między backend a frontend (niech działają równolegle)
+5. Dodaj cache dla NuGet i npm
+6. Dodaj flagi `--no-restore`, `--no-build`, użyj `npm ci`
+7. Push i porównaj czasy!
+
+---
+
+## Ćwiczenie 3 – Branch protection i Pull Request validation
+
+W tym ćwiczeniu skonfigurujesz branch protection na GitHub, aby wymagać przejścia zoptymalizowanego workflow CI przed merge'em.
+
+### 3.1 Skonfiguruj branch protection na GitHub
 
 1. W swoim repo na GitHub, przejdź do **Settings** → **Branches**
 2. W sekcji **Branch protection rules** kliknij **Add rule**
@@ -500,15 +214,16 @@ git push -u origin feature/improve-ui
 4. ✅ **Require a pull request before merging**
    - ✅ **Require approvals:** 1
 5. ✅ **Require status checks to pass before merging**
-   - Wyszukaj i zaznacz: `Backend (.NET)`, `Frontend (Node.js)`
+   - Wyszukaj i zaznacz: `Backend (.NET)`, `Frontend (Node.js)` (z workflow CI - Optimized)
 6. ✅ **Require branches to be up to date before merging**
 7. Kliknij **Create**
 
-### 4.4 Przetestuj branch protection – stwórz Pull Request
+### 3.2 Przetestuj branch protection – stwórz Pull Request
 
 1. Lokalnie stwórz nowy branch:
 
 ```powershell
+cd ~/wsei-devops-lab
 git checkout main
 git pull origin main
 git checkout -b feature/add-footer
@@ -534,9 +249,26 @@ git push -u origin feature/add-footer
 4. W GitHub, otwórz swoje repo → kliknij **Compare & pull request**
 5. Wypełnij tytuł i opis, kliknij **Create pull request**
 6. Zauważ, że PR jest blokowany – checks muszą przejść ✅
-7. Workflow CI (Optimized) uruchomi się automatycznie – poczekaj na sukces
+7. Workflow **CI - Optimized** uruchomi się automatycznie – poczekaj na sukces
 8. Dodaj prowadzącego (rcialowicz) jako **Reviewer**
 9. Po approve, zmerguj PR (**Merge pull request**)
+
+### 3.3 (Opcjonalnie) Przetestuj failed check
+
+Zrób PR który **nie przejdzie** testów:
+
+1. Stwórz branch `feature/break-tests`
+2. W `lab5/sample-ci/backend/ProductApi.Tests/ProductTests.cs` zmień oczekiwaną wartość:
+
+```csharp
+// Zmień z 0 na 999
+Assert.Equal(999, products.Count);  // To failuje!
+```
+
+3. Push i stwórz PR
+4. Workflow failuje ❌
+5. PR jest zablokowany – nie można zmergować!
+6. Popraw test, push ponownie → workflow przechodzi ✅ → można mergować
 
 ---
 
@@ -544,36 +276,16 @@ git push -u origin feature/add-footer
 
 Prześlij prowadzącemu:
 
-### Opcja A: Azure DevOps
-1. **Zrzut ekranu** pokazujący:
-   - Lista uruchomionych pipeline'ów w Azure DevOps (Pipelines → Pipelines)
-   - **Przed optymalizacją:** Pipeline z wieloma sekwencyjnymi jobs (długi czas)
-   - **Po optymalizacji:** Pipeline ze zoptymalizowaną strukturą (krótszy czas)
-   - Widok etapów zoptymalizowanego buildu - wszystkie zielone ✅
-   - Porównanie czasów: "Przed: X minut" vs "Po: Y minut"
-
-2. **Link do Pull Request** w Azure DevOps:
-   - PR z feature brancha do main
-   - Pipeline CI (zoptymalizowany) przeszedł ✅
-   - Approve prowadzącego (rcialowicz@wsei.edu.pl)
-   - PR zmergowany
-
-3. **Krótki opis optymalizacji** (2-3 zdania):
-   - Jakie problemy znalazłeś w oryginalnym pipeline?
-   - Jakie optymalizacje zastosowałeś?
-   - O ile % skrócił się czas buildu?
-
-### Opcja B: GitHub Actions
 1. **Zrzut ekranu** pokazujący:
    - Lista workflow runs w GitHub Actions
    - **Workflow "CI"** (nieoptymalizowany) - długi czas
-   - **Workflow "CI (Optimized)"** (zoptymalizowany) - krótszy czas
-   - Porównanie czasów wykonania
+   - **Workflow "CI - Optimized"** (zoptymalizowany) - krótszy czas
+   - Porównanie czasów wykonania (np. "CI: 8m 23s" vs "CI - Optimized: 3m 12s")
    - Widok jobów zoptymalizowanego workflow - wszystkie zielone ✅
 
 2. **Link do Pull Request** w GitHub:
    - PR z feature brancha do main
-   - Workflow CI (Optimized) przeszedł ✅ (wszystkie checks zielone)
+   - Workflow **CI - Optimized** przeszedł ✅ (wszystkie checks zielone)
    - Approve prowadzącego (rcialowicz)
    - PR zmergowany
 
@@ -582,8 +294,8 @@ Prześlij prowadzącemu:
    - Czy cache działa poprawnie?
    - O ile % skrócił się czas buildu?
 
-### Opcja C: Obie platformy (bonus)
-Jeśli zrobiłeś oba ćwiczenia (Azure DevOps + GitHub Actions), prześlij artefakty z obu platform – otrzymasz dodatkowe punkty! 🎉
+**Przykład opisu optymalizacji:**
+> "Połączyłem wszystkie backend jobs w jeden (restore+build+test+publish) i analogicznie frontend. Dodałem cache dla NuGet packages (actions/cache) i node_modules (setup-node cache). Użyłem flag --no-restore, --no-build w .NET oraz npm ci zamiast npm install. Czas buildu skrócił się z 8m 23s do 3m 12s (62% redukcja). Cache działa - drugi run był jeszcze szybszy (2m 45s)."
 
 ---
 
@@ -704,8 +416,8 @@ sonar.exclusions=**/node_modules/**,**/bin/**,**/obj/**
 
 ## Dodatkowe zasoby
 
-- [Azure Pipelines documentation](https://learn.microsoft.com/azure/devops/pipelines/)
 - [GitHub Actions documentation](https://docs.github.com/actions)
+- [GitHub Actions: Caching dependencies](https://docs.github.com/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
 - [SonarCloud documentation](https://docs.sonarcloud.io/)
 - [.NET testing in CI/CD](https://learn.microsoft.com/dotnet/core/testing/unit-testing-best-practices)
 

@@ -7,7 +7,7 @@ trigger:
     - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'Default'  # Self-hosted agent (MS-hosted wymaga approval dla free tier)
 
 # Pojedynczy etap z sekwencyjnymi jobami (wymóg Azure Pipelines free tier)
 stages:

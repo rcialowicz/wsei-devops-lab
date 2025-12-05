@@ -8,7 +8,7 @@ trigger:
     - main
 
 pool:
-  vmImage: 'windows-latest'  # Windows agent - wolniejszy niż Linux
+  name: 'Default'  # Self-hosted agent (MS-hosted wymaga approval dla free tier)
 
 # Etapy pipeline
 stages:
