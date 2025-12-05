@@ -3,8 +3,6 @@
 ## Prerekwizyty
 1. **Konto GitHub** (https://github.com/signup) - **WYMAGANE**
 2. Git zainstalowany lokalnie
-3. .NET 8 SDK i Node.js 20 zainstalowane lokalnie (do testowania lokalnie)
-4. Edytor kodu (VS Code, Visual Studio, lub inny)
 
 > **Uwaga:** W tym laboratorium używamy **GitHub Actions** jako platformy CI/CD. Azure DevOps wymaga approval dla Microsoft-hosted agents w free tier, dlatego koncentrujemy się na GitHub.
 
@@ -15,9 +13,8 @@
 ### 0.1 Załóż konto GitHub (jeśli nie masz)
 
 1. Przejdź do https://github.com/signup
-2. Wprowadź email, hasło, username
-3. Zweryfikuj email
-4. Wybierz **Free plan**
+2. Załóż konto zgodnie z przedstawioną intrukcją
+4. Jeśli zostaniesz poproszony o wybór planu wybierz **Free plan**
 
 ### 0.2 Stwórz fork repozytorium na GitHub
 
@@ -25,6 +22,8 @@
 2. Kliknij **Fork** (prawy górny róg)
 3. Stwórz fork w swoim koncie GitHub
 4. Poczekaj aż fork się utworzy
+
+> **Uwaga:** Jeśli masz problem ze stworzeniem forka, możesz sklonować repozytorium lokalnie, skopiować pliki, a następnie zrobić ich push do swojego repozytorium.
 
 ### 0.3 Sklonuj swojego forka lokalnie
 
@@ -44,9 +43,12 @@ wsei-devops-lab/
 │   └── ci-optimized.yml       # Workflow zoptymalizowany
 └── lab5/sample-ci/
     ├── backend/                # Backend API (.NET 8)
-    │   ├── Program.cs
-    │   ├── ProductApi.csproj
-    │   └── ProductApi.Tests/
+    │   ├── ProductApi/
+    │   │   ├── Program.cs
+    │   │   ─── ProductApi.csproj
+    │   ─── ProductApi.Tests/
+    │       ├── ProductTests.cs
+    │       ─── ProductApi.Tests.csproj
     └── frontend/               # Frontend (HTML/JS)
         ├── index.html
         ├── app.js
@@ -60,25 +62,13 @@ wsei-devops-lab/
 
 W tym ćwiczeniu uruchomisz workflow GitHub Actions, który automatycznie zbuduje i przetestuje backend (.NET) oraz frontend (Node.js) przy każdym push do brancha `main`.
 
-**UWAGA:** Workflow jest celowo **NIEOPTYMALIZOWANY** - Twoje zadanie w dalszej części to go zoptymalizować!
-
 ### 1.1 Przejrzyj plik .github/workflows/ci.yml
 
-W swoim sklonowanym repozytorium otwórz plik `lab5/sample-ci/.github/workflows/ci.yml`. Zauważ problemy:
-.github/workflows/ci.yml` (w root repozytorium)
-**Problemy do znalezienia:**
-- ❌ Backend ma 4 osobne jobs (restore, build, test, publish) - wszystkie **sekwencyjne**
-- ❌ Każdy job robi `dotnet restore` od nowa (brak cache)
-- ❌ Build jest powtarzany w wielu job'ach
-- ❌ Frontend ma 3 osobne jobs (install, test, build) - też **sekwencyjne**
-- ❌ Każdy job robi `npm install` od nowa (brak cache)
-- ❌ Backend i frontend czekają na siebie (needs), mimo że mogłyby działać równolegle
-
-**Przeczytaj komentarze w YAML - są oznaczone jako `# PROBLEM:`**
+W swoim sklonowanym repozytorium otwórz plik `.github/workflows/ci.yml` (w root repozytorium). Spróbuj znaleźć potencjalne problemy.
 
 ### 1.2 Push do swojego forka aby uruchomić workflow
 
-Workflow uruchomi się automatycznie przy push do `main`. Zróbmy małą zmianę:
+Workflow uruchomi się automatycznie przy push do `main`. Zrób małą zmianę:
 
 ```powershell
 cd ~/wsei-devops-lab
@@ -89,15 +79,14 @@ git commit -m "Trigger CI workflow"
 git push origin main
 ```
 
-### 1.3 Obserwuj (wolne) wykonanie workflow
+### 1.3 Obserwuj wykonanie workflow
 
 1. Otwórz swoje repo na GitHub: `https://github.com/<twoj-username>/wsei-devops-lab`
 2. Przejdź do zakładki **Actions**
 3. Zobaczysz workflow **CI** - kliknij na ostatni run
 4. Zobacz jobs:
-   - **backend-restore** → **backend-build** → **backend-test** → **backend-publish** (wszystkie **sekwencyjne** ❌)
-   - **frontend-install** → **frontend-test** → **frontend-build** (też **sekwencyjne** ❌)
-   - Backend i Frontend czekają na siebie mimo że mogłyby działać równolegle ❌
+   - **backend-restore** → **backend-build** → **backend-test** → **backend-publish**
+   - **frontend-install** → **frontend-test** → **frontend-build**
 
 **Zapisz całkowity czas wykonania workflow** - będziesz go porównywać po optymalizacji!
 
@@ -108,7 +97,7 @@ Kliknij na każdy job i zobacz logi:
 - Czy `.NET SDK` / `Node.js` jest setupowane wielokrotnie?
 - Czy `dotnet restore` / `npm install` jest wykonywany wielokrotnie?
 - Ile czasu zajmuje każda operacja?
-- Czy widzisz "Cache restored" gdziekolwiek? (Nie - brak cache! ❌)
+- Czy widzisz "Cache restored" gdziekolwiek?
 
 **Zrób zrzut ekranu pokazujący czasy poszczególnych jobs.**
 
@@ -132,27 +121,83 @@ Workflow z Ćwiczenia 1 ma następujące problemy:
 
 ### 2.2 Stwórz zoptymalizowany workflow
 
-W swoim repozytorium już jest plik `.github/workflows/ci-optimized.yml` (w root repozytorium) - to wzorcowa implementacja. Przejrzyj go:
+Skopiuj plik `ci.yml` i stwórz nową, zoptymalizowaną wersję:
 
 ```powershell
 cd ~/wsei-devops-lab
-cat .github/workflows/ci-optimized.yml
+cp .github/workflows/ci.yml .github/workflows/ci-optimized.yml
 ```
 
-**Zaobserwuj optymalizacje:**
-- ✅ Backend i frontend działają **równolegle** (brak `needs` między nimi)
-- ✅ Każdy komponent ma **jeden job** zamiast wielu (wszystkie kroki w jednym miejscu)
-- ✅ **Cache** dla NuGet packages (`actions/cache`) i node_modules (built-in w `setup-node`)
-- ✅ Używamy `--no-restore`, `--no-build` w .NET
-- ✅ Używamy `npm ci` zamiast `npm install` (szybsze w CI)
+Teraz skopiuj `ci.yml` do  `.github/workflows/ci-optimized.yml` i zastosuj następujące optymalizacje:
+
+#### Optymalizacja 1: Połącz backend jobs w jeden
+
+Obecny workflow ma 4 osobne jobs dla backendu (`backend-restore` → `backend-build` → `backend-test` → `backend-publish`). **Usuń je wszystkie i stwórz jeden job `backend`** z tą samą nazwą `Backend (.NET)`.
+
+**Co zmienić:**
+1. Połącz wszystkie steps z 4 jobs w jeden job
+2. Setup .NET tylko raz na początku
+3. **Dodaj cache dla NuGet packages** przed krokiem restore:
+   ```yaml
+   - name: Cache NuGet packages
+     uses: actions/cache@v4
+     with:
+       path: ~/.nuget/packages
+       key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
+   ```
+4. W kroku build dodaj flagę `--no-restore`:
+   ```bash
+   dotnet build --no-restore --configuration Release
+   ```
+5. W krokach test i publish dodaj flagę `--no-build`:
+   ```bash
+   dotnet test --no-build --configuration Release --logger trx
+   dotnet publish --no-build --configuration Release --output ./publish
+   ```
+
+**Rezultat:** Jeden job zamiast czterech, jeden setup SDK, cache dla dependencies.
+
+#### Optymalizacja 2: Połącz frontend jobs w jeden
+
+Analogicznie, **usuń 3 frontend jobs i stwórz jeden job `frontend`** z nazwą `Frontend (Node.js)`.
+
+**Co zmienić:**
+1. Połącz wszystkie steps w jeden job
+2. W setup-node **włącz built-in cache**:
+   ```yaml
+   - name: Setup Node.js
+     uses: actions/setup-node@v4
+     with:
+       node-version: '20'
+       cache: 'npm'
+       cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
+   ```
+3. Użyj `npm ci` zamiast `npm install`:
+   ```bash
+   npm ci
+   ```
+
+**Rezultat:** Jeden job zamiast trzech, built-in cache dla node_modules.
+
+#### Optymalizacja 3: Usuń dependencies między backend a frontend
+
+W oryginalnym workflow backend i frontend czekają na siebie poprzez `needs:`. **Usuń wszystkie `needs:`** między nimi - mogą działać **równolegle**!
+
+Upewnij się, że w pliku **NIE MA** takich linii:
+```yaml
+needs: backend  # USUŃ!
+needs: frontend  # USUŃ!
+```
+
+**Rezultat:** Backend i frontend startują jednocześnie, nie czekają na siebie.
 
 ### 2.3 Uruchom zoptymalizowany workflow
 
-Workflow `ci-optimized.yml` uruchomi się automatycznie przy każdym pushu. Zróbmy push:
+Zapisz plik `.github/workflows/ci-optimized.yml` i zrób commit:
 
 ```powershell
-git add .
-git commit -m "Add optimized workflow" --allow-empty
+git add .github/workflows/ci-optimized.yml
+git commit -m "Add optimized CI workflow"
 git push origin main
 ```
 
@@ -160,45 +205,18 @@ git push origin main
 
 1. Otwórz swoje repo na GitHub: `https://github.com/<twoj-username>/wsei-devops-lab`
 2. Przejdź do zakładki **Actions**
-3. Zobaczysz dwa workflows:
-   - **CI** (wolny, nieoptymalizowany)
-   - **CI - Optimized** (szybki, zoptymalizowany)
-4. Kliknij na ostatni run workflow **CI - Optimized**
-5. **Zmierz czas wykonania** i porównaj z workflow **CI**!
+3. Zobaczysz dwa workflows działające równocześnie:
+   - **CI** (wolny, nieoptymalizowany - 9 jobs sekwencyjnych)
+   - **CI - Optimized** (szybki, zoptymalizowany - 2 jobs równoległe)
+4. Poczekaj aż oba się zakończą
+5. **Zmierz czas wykonania** każdego workflow i porównaj!
 
 **Oczekiwany wynik:**
-- ✅ Czas buildu skrócony o 40-60%
-- ✅ Cache działa (zobacz "Cache restored" w logach Setup .NET i Setup Node.js)
-- ✅ Backend i Frontend działają równolegle
-- ✅ Jobs są krótsze i prostsze (jeden job na komponent)
+- ✅ Czas buildu skrócony o **50-70%** (np. z 8 minut do 3 minut)
+- ✅ Backend i Frontend działają **równolegle** (zobacz timeline)
+- ✅ Każdy komponent ma tylko **1 job** zamiast 3-4
 
 **Zrób zrzut ekranu porównujący czasy obu workflows.**
-
-### 2.5 Przetestuj cache
-
-1. Uruchom workflow ponownie (bez zmian w kodzie):
-
-```powershell
-git commit -m "Test cache" --allow-empty
-git push origin main
-```
-
-2. Zobacz logi **CI - Optimized** workflow:
-   - W kroku **Setup .NET** → **Cache NuGet packages** powinno być "Cache hit" ✅
-   - W kroku **Setup Node.js** powinno być "Cache restored" ✅
-3. Zauważ że `dotnet restore` i `npm ci` są **znacznie szybsze** (pomijają download)
-
-### 2.6 (Opcjonalnie) Stwórz własną optymalizację
-
-Zamiast używać gotowego `ci-optimized.yml`, możesz samodzielnie zoptymalizować `ci.yml`:
-
-1. Skopiuj `.github/workflows/ci.yml` do `.github/workflows/ci-my-optimization.yml`
-2. Połącz backend jobs w jeden (wszystkie kroki w `backend` job)
-3. Połącz frontend jobs w jeden (wszystkie kroki w `frontend` job)
-4. Usuń `needs` między backend a frontend (niech działają równolegle)
-5. Dodaj cache dla NuGet i npm
-6. Dodaj flagi `--no-restore`, `--no-build`, użyj `npm ci`
-7. Push i porównaj czasy!
 
 ---
 
@@ -299,46 +317,6 @@ Prześlij prowadzącemu:
 
 ---
 
-## Troubleshooting
-
-### Problem: Pipeline failuje na etapie Build (.NET)
-**Rozwiązanie:**
-- Sprawdź logi buildu – szukaj błędów kompilacji
-- Upewnij się, że ścieżki do projektów .csproj są prawidłowe
-- Zweryfikuj wersję .NET SDK (powinna być 8.x)
-
-### Problem: Pipeline failuje na etapie Test
-**Rozwiązanie:**
-- Sprawdź, czy testy przechodzą lokalnie: `dotnet test`
-- Upewnij się, że wszystkie pliki testowe są zacommitowane
-- Zobacz dokładny błąd w logach task'a Test
-
-### Problem: npm install jest bardzo wolny
-**Rozwiązanie:**
-- Upewnij się, że używasz cache (actions/cache lub Cache@2)
-- Użyj `npm ci` zamiast `npm install` w CI
-- Sprawdź czy package-lock.json jest zacommitowany
-
-### Problem: Cache nie działa (zawsze "Cache miss")
-**Rozwiązanie:**
-- Sprawdź klucz cache - czy hashFiles() wskazuje na prawidłowe pliki?
-- Dla .NET: packages.lock.json musi istnieć (generowany przez `dotnet restore --use-lock-file`)
-- Dla npm: package-lock.json musi być zacommitowany
-- Zobacz logi task'a Cache - pokaże dlaczego cache miss
-
-### Problem: Jobs wykonują się sekwencyjnie zamiast równolegle
-**Rozwiązanie:**
-- Usuń `dependsOn` / `needs` między jobs, które mogą działać równolegle
-- Backend i Frontend mogą działać równolegle - nie powinny od siebie zależeć
-
-### Problem: dotnet build powtarza restore
-**Rozwiązanie:**
-- Użyj flagi `--no-restore` w `dotnet build`
-- Użyj flagi `--no-build` w `dotnet test` i `dotnet publish`
-- Upewnij się że restore jest wykonany **przed** buildem w tym samym job
-
----
-
 ## Co dalej?
 
 Gratulacje! Właśnie stworzyłeś i **zoptymalizowałeś** kompletny pipeline CI, który:
@@ -356,71 +334,4 @@ Gratulacje! Właśnie stworzyłeś i **zoptymalizowałeś** kompletny pipeline C
 4. 🎯 **Używaj flag optymalizacyjnych** - `--no-restore`, `--no-build`, `npm ci`
 5. 📊 **Mierz i porównuj** - zawsze sprawdzaj czy optymalizacja zadziałała
 
-**Typowe oszczędności czasu po optymalizacji:**
-- Cache dla dependencies: **30-50%** szybciej
-- Połączenie jobs: **20-40%** szybciej
-- Paralelizacja: **40-60%** szybciej
-- **Łącznie: 50-80% redukcja czasu buildu!** 🎉
-
-**Następne kroki:**
-- **Lab 6 (Continuous Delivery):** Automatyczny deployment do Azure (App Service, AKS)
-- **Lab 7 (GitOps):** Deployment zarządzany przez Git (ArgoCD, Flux)
-
-**Dalsze nauki (self-paced):**
-- Dodaj code coverage gate (np. minimum 80% pokrycia testami)
-- Zintegruj security scanning (Snyk, Trivy dla zależności)
-- Dodaj notification do Microsoft Teams / Slack przy failed build
-- Eksperymentuj z matrix builds (testuj na wielu wersjach .NET / Node.js)
-- Dodaj performance tests (np. k6, Apache Bench)
-- Zintegruj SonarCloud dla analizy jakości kodu (opcjonalne ćwiczenie poniżej)
-
 ---
-
-## Ćwiczenie bonus – Integracja z SonarCloud (opcjonalnie)
-
-Jeśli chcesz dodać analizę jakości kodu, możesz zintegrować SonarCloud:
-
-### 1. Stwórz konto SonarCloud
-1. Otwórz https://sonarcloud.io
-2. Zaloguj się przez GitHub
-3. Dodaj swoje repo do analizy
-
-### 2. Dodaj do GitHub Actions workflow
-
-```yaml
-  sonarcloud:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Full history dla lepszej analizy
-    
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-```
-
-### 3. Stwórz sonar-project.properties
-
-```properties
-sonar.projectKey=<twoj-username>_wsei-devops-lab
-sonar.organization=<twoja-org>
-sonar.sources=lab5/sample-ci
-sonar.exclusions=**/node_modules/**,**/bin/**,**/obj/**
-```
-
----
-
-## Dodatkowe zasoby
-
-- [GitHub Actions documentation](https://docs.github.com/actions)
-- [GitHub Actions: Caching dependencies](https://docs.github.com/actions/using-workflows/caching-dependencies-to-speed-up-workflows)
-- [SonarCloud documentation](https://docs.sonarcloud.io/)
-- [.NET testing in CI/CD](https://learn.microsoft.com/dotnet/core/testing/unit-testing-best-practices)
-
----
-
-> Powodzenia! Jeśli masz pytania podczas ćwiczeń, zgłoś się do prowadzącego.
