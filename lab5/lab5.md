@@ -252,7 +252,7 @@ git checkout -b feature/add-footer
 ```html
 <!-- Na końcu <body>, przed </body> -->
 <footer style="text-align: center; margin-top: 20px; padding: 10px; background: #f5f5f5;">
-    <p>© 2025 Product Manager | CI/CD Demo</p>
+    <p>© 2025 WSEI | CI/CD Demo</p>
 </footer>
 ```
 
@@ -268,8 +268,7 @@ git push -u origin feature/add-footer
 5. Wypełnij tytuł i opis, kliknij **Create pull request**
 6. Zauważ, że PR jest blokowany – checks muszą przejść ✅
 7. Workflow **CI - Optimized** uruchomi się automatycznie – poczekaj na sukces
-8. Dodaj prowadzącego (rcialowicz) jako **Reviewer**
-9. Po approve, zmerguj PR (**Merge pull request**)
+8. Approve, zmerguj PR (**Merge pull request**)
 
 ### 3.3 (Opcjonalnie) Przetestuj failed check
 
@@ -311,27 +310,5 @@ Prześlij prowadzącemu:
    - Jakie optymalizacje zastosowałeś?
    - Czy cache działa poprawnie?
    - O ile % skrócił się czas buildu?
-
-**Przykład opisu optymalizacji:**
-> "Połączyłem wszystkie backend jobs w jeden (restore+build+test+publish) i analogicznie frontend. Dodałem cache dla NuGet packages (actions/cache) i node_modules (setup-node cache). Użyłem flag --no-restore, --no-build w .NET oraz npm ci zamiast npm install. Czas buildu skrócił się z 8m 23s do 3m 12s (62% redukcja). Cache działa - drugi run był jeszcze szybszy (2m 45s)."
-
----
-
-## Co dalej?
-
-Gratulacje! Właśnie stworzyłeś i **zoptymalizowałeś** kompletny pipeline CI, który:
-- ✅ Automatycznie buduje backend (.NET) i frontend (Node.js) przy każdym commicie
-- ✅ Uruchamia testy jednostkowe dla obu komponentów
-- ✅ Publikuje artefakty (binaria .NET, built frontend)
-- ✅ Używa cache dla przyspieszenia buildów
-- ✅ Wykonuje joby równolegle gdzie to możliwe
-- ✅ Wymusza code review i przejście CI przed merge'em (branch policies)
-
-**Najważniejsze lekcje z optymalizacji:**
-1. 🚀 **Łącz related steps w jeden job** - unikaj powtarzania setup i restore
-2. 💾 **Używaj cache** - NuGet packages, node_modules
-3. ⚡ **Paralelizuj** - backend i frontend mogą działać równocześnie
-4. 🎯 **Używaj flag optymalizacyjnych** - `--no-restore`, `--no-build`, `npm ci`
-5. 📊 **Mierz i porównuj** - zawsze sprawdzaj czy optymalizacja zadziałała
 
 ---
