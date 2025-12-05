@@ -1,0 +1,100 @@
+name: CI - Optimized
+
+# Ten workflow pokazuje najlepsze praktyki optymalizacji CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Backend i Frontend działają równolegle
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    # Cache dla NuGet packages
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    
+    # Restore raz
+    - name: Restore dependencies
+      run: |
+        cd lab5/sample-ci/backend
+        dotnet restore
+    
+    # Build raz (z --no-restore)
+    - name: Build
+      run: |
+        cd lab5/sample-ci/backend
+        dotnet build --configuration Release --no-restore
+    
+    # Test (z --no-build i --no-restore)
+    - name: Test
+      run: |
+        cd lab5/sample-ci/backend
+        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
+          --configuration Release \
+          --no-build \
+          --no-restore \
+          --logger trx
+    
+    # Publish (z --no-build)
+    - name: Publish
+      run: |
+        cd lab5/sample-ci/backend
+        dotnet publish --configuration Release --no-build --output ./publish
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend
+        path: lab5/sample-ci/backend/publish
+
+  frontend:
+    name: Frontend (Node.js)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'lab5/sample-ci/frontend/package-lock.json'
+    
+    # Install raz (npm ci jest szybsze niż npm install)
+    - name: Install dependencies
+      run: |
+        cd lab5/sample-ci/frontend
+        npm ci
+    
+    - name: Run tests
+      run: |
+        cd lab5/sample-ci/frontend
+        npm test
+    
+    - name: Build
+      run: |
+        cd lab5/sample-ci/frontend
+        npm run build
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend
+        path: lab5/sample-ci/frontend/dist

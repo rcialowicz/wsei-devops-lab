@@ -117,7 +117,7 @@ stages:
 # Etap 2: Frontend Node.js
 - stage: FrontendBuild
   displayName: 'Frontend Build'
-  dependsOn: []  # Może działać równolegle z Backend
+  dependsOn: BackendBuild  # Sequential (wymóg Azure Pipelines free tier)
   jobs:
   - job: NpmInstall
     displayName: 'Install npm packages'
