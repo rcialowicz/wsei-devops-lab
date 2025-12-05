@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   backend-restore:
     name: Backend - Restore
@@ -20,7 +25,7 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet restore
 
   backend-build:
@@ -37,12 +42,16 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
+        dotnet restore
+        cd ../ProductApi.Tests
         dotnet restore
     
     - name: Build
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
+        dotnet build --configuration Release
+        cd ../ProductApi.Tests
         dotnet build --configuration Release
 
   backend-test:
@@ -59,20 +68,31 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
+        dotnet restore
+        cd ../ProductApi.Tests
         dotnet restore
     
     - name: Build
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
+        dotnet build --configuration Release
+        cd ../ProductApi.Tests
         dotnet build --configuration Release
     
     - name: Test
       run: |
-        cd lab5/sample-ci/backend
-        dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
-          --configuration Release \
-          --logger trx
+        cd lab5/sample-ci/backend/ProductApi.Tests
+        dotnet test --configuration Release --logger trx
+    
+    - name: Publish test results
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: Backend Tests (.NET)
+        path: '**/TestResults/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: false
 
   backend-publish:
     name: Backend - Publish
@@ -88,24 +108,24 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet restore
     
     - name: Build
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet build --configuration Release
     
     - name: Publish
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet publish --configuration Release --output ./publish
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: backend
-        path: lab5/sample-ci/backend/publish
+        path: lab5/sample-ci/backend/ProductApi/publish
 
   frontend-install:
     name: Frontend - Install

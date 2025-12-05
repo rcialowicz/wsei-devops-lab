@@ -10,6 +10,12 @@
 /lab3/infra/vmss*
 /lab3/infra/deploy.ps1
 
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
