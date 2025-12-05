@@ -1,6 +1,3 @@
-# Azure Pipelines CI - OPTIMIZED VERSION
-# Ten pipeline pokazuje najlepsze praktyki optymalizacji CI/CD
-
 trigger:
   branches:
     include:
@@ -9,12 +6,10 @@ trigger:
 pool:
   name: 'Default'  # Self-hosted agent (MS-hosted wymaga approval dla free tier)
 
-# Pojedynczy etap z sekwencyjnymi jobami (wymóg Azure Pipelines free tier)
 stages:
 - stage: Build
   displayName: 'Build and Test'
   jobs:
-  # Backend .NET - wszystko w jednym jobie
   - job: Backend
     displayName: 'Backend (.NET)'
     steps:
@@ -24,7 +19,6 @@ stages:
         packageType: 'sdk'
         version: '8.x'
     
-    # Cache dla NuGet packages
     - task: Cache@2
       displayName: 'Cache NuGet packages'
       inputs:
@@ -33,19 +27,16 @@ stages:
         restoreKeys: |
           nuget | "$(Agent.OS)"
     
-    # Restore raz
     - script: |
         cd lab5/sample-ci/backend
         dotnet restore
       displayName: 'Restore dependencies'
     
-    # Build raz (z --no-restore)
     - script: |
         cd lab5/sample-ci/backend
         dotnet build --configuration Release --no-restore
       displayName: 'Build application'
     
-    # Test (z --no-build i --no-restore)
     - script: |
         cd lab5/sample-ci/backend
         dotnet test ProductApi.Tests/ProductApi.Tests.csproj \
@@ -62,7 +53,6 @@ stages:
         testResultsFormat: 'VSTest'
         testResultsFiles: '**/TestResults/*.trx'
     
-    # Publish (z --no-build)
     - script: |
         cd lab5/sample-ci/backend
         dotnet publish --configuration Release --no-build --output $(Build.ArtifactStagingDirectory)/backend
@@ -74,7 +64,6 @@ stages:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend'
         ArtifactName: 'backend'
 
-  # Frontend Node.js - wszystko w jednym jobie, sekwencyjnie po Backend
   - job: Frontend
     displayName: 'Frontend (Node.js)'
     dependsOn: Backend
@@ -84,7 +73,6 @@ stages:
       inputs:
         versionSpec: '20.x'
     
-    # Cache dla node_modules
     - task: Cache@2
       displayName: 'Cache node_modules'
       inputs:
@@ -93,19 +81,16 @@ stages:
         restoreKeys: |
           npm | "$(Agent.OS)"
     
-    # Install raz
     - script: |
         cd lab5/sample-ci/frontend
         npm ci
       displayName: 'Install dependencies'
     
-    # Test
     - script: |
         cd lab5/sample-ci/frontend
         npm test
       displayName: 'Run tests'
     
-    # Build
     - script: |
         cd lab5/sample-ci/frontend
         npm run build
