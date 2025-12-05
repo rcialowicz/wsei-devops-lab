@@ -39,6 +39,8 @@ jobs:
       run: |
         cd lab5/sample-ci/backend/ProductApi
         dotnet restore
+        cd ../ProductApi.Tests
+        dotnet restore
     
     - name: Build
       run: |
@@ -61,17 +63,16 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
+        dotnet restore
+        cd ../ProductApi.Tests
         dotnet restore
     
     - name: Build
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet build --configuration Release
-
-    - name: Build Test
-      run: |
-        cd ProductApi.Tests
+        cd ../ProductApi.Tests
         dotnet build --configuration Release
     
     - name: Test
