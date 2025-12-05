@@ -128,8 +128,6 @@ cd ~/wsei-devops-lab
 cp .github/workflows/ci.yml .github/workflows/ci-optimized.yml
 ```
 
-Teraz skopiuj `ci.yml` do  `.github/workflows/ci-optimized.yml` i zastosuj następujące optymalizacje:
-
 #### Optymalizacja 1: Połącz backend jobs w jeden
 
 Obecny workflow ma 4 osobne jobs dla backendu (`backend-restore` → `backend-build` → `backend-test` → `backend-publish`). **Usuń je wszystkie i stwórz jeden job `backend`** z tą samą nazwą `Backend (.NET)`.
