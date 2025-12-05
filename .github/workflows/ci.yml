@@ -20,7 +20,7 @@ jobs:
     
     - name: Restore dependencies
       run: |
-        cd lab5/sample-ci/backend
+        cd lab5/sample-ci/backend/ProductApi
         dotnet restore
 
   backend-build:
