@@ -5,75 +5,75 @@ on:
     branches: [main]
 
 jobs:
-backend:
-  name: Backend - Full Pipeline
-  runs-on: ubuntu-latest
-
-  steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-
-    # Nuget
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
-
-    # Restore
-    - name: Restore dependencies
-      run: |
-        cd lab5/sample-ci/backend/ProductApi
-        dotnet restore
-        cd ../ProductApi.Tests
-        dotnet restore
-
-    # Build
-    - name: Build
-      run: |
-        cd lab5/sample-ci/backend/ProductApi
-        dotnet build --no-restore --configuration Release
-        cd ../ProductApi.Tests
-        dotnet build --no-restore --configuration Release
-
-    # Test
-    - name: Test
-      run: |
-        cd lab5/sample-ci/backend/ProductApi.Tests
-        dotnet --no-build test --configuration Release --logger trx
-
-    # Publish
-    - name: Publish
-      run: |
-        cd lab5/sample-ci/backend/ProductApi
-        dotnet --no-build publish --configuration Release --output ./publish
-
-    # Upload artifact
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: backend
-        path: lab5/sample-ci/backend/ProductApi/publish
-
-  frontend-install:
-    name: Frontend - Install
+  backend:
+    name: Backend - Full Pipeline
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    
-    - name: Install dependencies
-      run: |
-        cd lab5/sample-ci/frontend
-        npm install
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Nuget
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
+
+      # Restore
+      - name: Restore dependencies
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet restore
+          cd ../ProductApi.Tests
+          dotnet restore
+
+      # Build
+      - name: Build
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet build --no-restore --configuration Release
+          cd ../ProductApi.Tests
+          dotnet build --no-restore --configuration Release
+
+      # Test
+      - name: Test
+        run: |
+          cd lab5/sample-ci/backend/ProductApi.Tests
+          dotnet --no-build test --configuration Release --logger trx
+
+      # Publish
+      - name: Publish
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet --no-build publish --configuration Release --output ./publish
+
+      # Upload artifact
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend
+          path: lab5/sample-ci/backend/ProductApi/publish
+
+    frontend-install:
+      name: Frontend - Install
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: |
+          cd lab5/sample-ci/frontend
+          npm install
 
   frontend-test:
     name: Frontend - Test
