@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore lab5/sample-ci/backend/ProductApi/ProductApi.csproj
+
+      - name: Build project
+        run: dotnet build --configuration Release lab5/sample-ci/backend/ProductApi/ProductApi.csproj
+
+      - name: Run tests
+        run: dotnet test --configuration Release lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj
+
+      - name: Publish project
+        run: dotnet publish --configuration Release --output ./publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj
+
+  frontend:
+    name: Frontend (Node.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js with cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
+
+      - name: Build, test and install dependencies
+        run: |
+          cd lab5/sample-ci/frontend
+          npm ci
+          npm test
+          npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: lab5/sample-ci/frontend/dist
