@@ -29,17 +29,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
+      # POPRAWKA: Wskazujemy konkretne projekty do przywrócenia
       - name: Restore dependencies
-        run: dotnet restore
+        run: |
+          dotnet restore ProductApi/ProductApi.csproj
+          dotnet restore ProductApi.Tests/ProductApi.Tests.csproj
 
+      # POPRAWKA: Budujemy konkretny projekt
       - name: Build
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build ProductApi/ProductApi.csproj --no-restore --configuration Release
 
+      # POPRAWKA: Testujemy konkretny projekt testowy
       - name: Test
-        run: dotnet test --no-build --configuration Release --logger trx
+        run: dotnet test ProductApi.Tests/ProductApi.Tests.csproj --no-build --configuration Release --logger trx
 
+      # POPRAWKA: Publikujemy konkretny projekt API
       - name: Publish
-        run: dotnet publish --no-build --configuration Release --output ./publish
+        run: dotnet publish ProductApi/ProductApi.csproj --no-build --configuration Release --output ./publish
 
   frontend:
     name: Frontend (Node.js)
