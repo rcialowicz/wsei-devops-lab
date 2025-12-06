@@ -5,74 +5,70 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  backend:
+    name: Backend (.NET)
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
     - name: Cache NuGet packages
       uses: actions/cache@v4
       with:
         path: ~/.nuget/packages
         key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
-
-    - name: Backend - Restore
+    - name: Restore
       run: |
         cd lab5/sample-ci/backend/ProductApi
         dotnet restore
         cd ../ProductApi.Tests
         dotnet restore
-
-    - name: Backend - Build
+    - name: Build
       run: |
         cd lab5/sample-ci/backend/ProductApi
         dotnet build --no-restore --configuration Release
         cd ../ProductApi.Tests
         dotnet build --no-restore --configuration Release
-
-    - name: Backend - Test
+    - name: Test
       run: |
         cd lab5/sample-ci/backend/ProductApi.Tests
         dotnet test --no-build --configuration Release --logger trx
-
-    - name: Backend - Publish
+    - name: Publish
       run: |
         cd lab5/sample-ci/backend/ProductApi
         dotnet publish --no-build --configuration Release --output ./publish
-
-    - name: Upload backend artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: backend
         path: lab5/sample-ci/backend/ProductApi/publish
 
-    - name: Frontend - Install
+  frontend:
+    name: Frontend (Node.js)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
+    - name: Install
       run: |
         cd lab5/sample-ci/frontend
-        npm install
-
-    - name: Frontend - Test
+        npm ci
+    - name: Test
       run: |
         cd lab5/sample-ci/frontend
         npm test
-
-    - name: Frontend - Build
+    - name: Build
       run: |
         cd lab5/sample-ci/frontend
         npm run build
-
-    - name: Upload frontend artifacts
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: frontend
