@@ -20,32 +20,26 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+
+      # Dodałem ten krok - pokaże nam w logach jakie są pliki, jeśli znowu coś pójdzie nie tak
+      - name: Debug - List files
+        run: ls -R
           
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      # POPRAWKA: Wskazujemy konkretne projekty do przywrócenia
       - name: Restore dependencies
-        run: |
-          dotnet restore ProductApi/ProductApi.csproj
-          dotnet restore ProductApi.Tests/ProductApi.Tests.csproj
+        # Ta komenda sama znajdzie każdy plik .csproj w folderze i go przywróci
+        run: dotnet restore **/*.csproj
 
-      # POPRAWKA: Budujemy konkretny projekt
       - name: Build
-        run: dotnet build ProductApi/ProductApi.csproj --no-restore --configuration Release
+        # Buduj każdy projekt Release, bez ponownego restore
+        run: dotnet build **/*.csproj --no-restore --configuration Release
 
-      # POPRAWKA: Testujemy konkretny projekt testowy
       - name: Test
-        run: dotnet test ProductApi.Tests/ProductApi.Tests.csproj --no-build --configuration Release --logger trx
+        # Testuj każdy projekt testowy
+        run: dotnet test **/*.Tests.csproj --no-build --configuration Release --logger trx
 
-      # POPRAWKA: Publikujemy konkretny projekt API
       - name: Publish
-        run: dotnet publish ProductApi/ProductApi.csproj --no-build --configuration Release --output ./publish
+        # Publikuj główny projekt API
+        run: dotnet publish **/ProductApi.csproj --no-build --configuration Release --output ./publish
 
   frontend:
     name: Frontend (Node.js)
