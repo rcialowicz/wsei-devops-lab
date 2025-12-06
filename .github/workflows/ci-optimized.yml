@@ -1,0 +1,62 @@
+name: CI - Optimized
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
+
+      - name: Restore
+        run: dotnet restore lab5/sample-ci/backend
+
+      - name: Build
+        run: dotnet build lab5/sample-ci/backend --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test lab5/sample-ci/backend --no-build --configuration Release --logger trx
+
+      - name: Publish
+        run: dotnet publish lab5/sample-ci/backend --no-build --configuration Release --output ./publish
+
+  frontend:
+    name: Frontend (Node.js)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
+
+      - name: Install
+        run: npm ci --prefix lab5/sample-ci/frontend
+
+      - name: Test
+        run: npm test --prefix lab5/sample-ci/frontend
+
+      - name: Build
+        run: npm run build --prefix lab5/sample-ci/frontend
