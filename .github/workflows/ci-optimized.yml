@@ -8,12 +8,10 @@ jobs:
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Cache NuGet packages
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -37,15 +35,13 @@ jobs:
       - name: Publish
         run: dotnet publish --no-build --configuration Release --output ./publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj
 
-
   frontend:
     name: Frontend (Node.js)
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js with cache
         uses: actions/setup-node@v4
         with:
           node-version: '20'
