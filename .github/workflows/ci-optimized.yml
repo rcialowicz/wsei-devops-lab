@@ -32,8 +32,8 @@ jobs:
 
       - name: Test
         # Tu też pełna ścieżka do testów
-        run: dotnet test lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj --no-build --configuration Release --logger trx
-
+        run: dotnet test lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj --configuration Release
+      
       - name: Publish
         run: dotnet publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj --no-build --configuration Release --output ./publish
 
