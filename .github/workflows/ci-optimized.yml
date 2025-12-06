@@ -2,10 +2,11 @@ name: CI - Optimized
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
 
 jobs:
+
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
@@ -26,16 +27,34 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
 
       - name: Restore
-        run: dotnet restore lab5/sample-ci/backend
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet restore
+          cd ../ProductApi.Tests
+          dotnet restore
 
       - name: Build
-        run: dotnet build lab5/sample-ci/backend --no-restore --configuration Release
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet build --no-restore --configuration Release
+          cd ../ProductApi.Tests
+          dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test lab5/sample-ci/backend --no-build --configuration Release --logger trx
+        run: |
+          cd lab5/sample-ci/backend/ProductApi.Tests
+          dotnet test --no-build --configuration Release --logger trx
 
       - name: Publish
-        run: dotnet publish lab5/sample-ci/backend --no-build --configuration Release --output ./publish
+        run: |
+          cd lab5/sample-ci/backend/ProductApi
+          dotnet publish --no-build --configuration Release --output ./publish
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend
+          path: lab5/sample-ci/backend/ProductApi/publish
 
   frontend:
     name: Frontend (Node.js)
@@ -48,15 +67,27 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
 
-      - name: Install
-        run: npm ci --prefix lab5/sample-ci/frontend
+      - name: Install dependencies
+        run: |
+          cd lab5/sample-ci/frontend
+          npm ci
 
-      - name: Test
-        run: npm test --prefix lab5/sample-ci/frontend
+      - name: Run tests
+        run: |
+          cd lab5/sample-ci/frontend
+          npm test
 
       - name: Build
-        run: npm run build --prefix lab5/sample-ci/frontend
+        run: |
+          cd lab5/sample-ci/frontend
+          npm run build
+
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: lab5/sample-ci/frontend/dist
