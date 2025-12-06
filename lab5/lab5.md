@@ -89,6 +89,9 @@ git push origin main
    - **frontend-install** → **frontend-test** → **frontend-build**
 
 **Zapisz całkowity czas wykonania workflow** - będziesz go porównywać po optymalizacji!
+=================
+      2m 18s 
+=================
 
 ### 1.4 Przeanalizuj logi
 
