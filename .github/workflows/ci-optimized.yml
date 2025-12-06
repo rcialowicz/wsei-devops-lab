@@ -87,4 +87,3 @@ jobs:
         with:
           name: frontend
           path: lab5/sample-ci/frontend/dist
-ath: lab5/sample-ci/frontend/dist
