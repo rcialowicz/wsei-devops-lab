@@ -13,3 +13,5 @@ Znajdziesz tutaj przykładowe zadania krok po kroku, skrypty PowerShell oraz kr�
 5. 06/12/2025 — Continuous Integration (CI) - [lab5.md](lab5/lab5.md)
 6. 20/12/2025 — Continuous Delivery (CD)
 7. 10/01/2026 — GitOps i podsumowanie
+
+# Lab 5 - CI Optimization
