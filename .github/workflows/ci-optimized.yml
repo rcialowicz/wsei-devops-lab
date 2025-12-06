@@ -1,4 +1,4 @@
-name: CI
+name: CI - Optimized
 
 on:
   push:
@@ -8,6 +8,7 @@ jobs:
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,17 +23,19 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
 
-      - name: Restore dependencies
+      - name: Restore
         run: |
           cd lab5/sample-ci/backend/ProductApi
+          dotnet restore
+          cd ../ProductApi.Tests
           dotnet restore
 
       - name: Build
         run: |
           cd lab5/sample-ci/backend/ProductApi
-          dotnet build  --no-restore --configuration Release
+          dotnet build --no-restore --configuration Release
           cd ../ProductApi.Tests
-          dotnet build  --no-restore --configuration Release
+          dotnet build --no-restore --configuration Release
 
       - name: Test
         run: |
@@ -44,7 +47,7 @@ jobs:
           cd lab5/sample-ci/backend/ProductApi
           dotnet publish --no-build --configuration Release --output ./publish
 
-      - name: Upload artifacts
+      - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: backend
@@ -53,6 +56,7 @@ jobs:
   frontend:
     name: Frontend (Node.js)
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -66,9 +70,9 @@ jobs:
       - name: Install dependencies
         run: |
           cd lab5/sample-ci/frontend
-          npm install
+          npm ci
 
-      - name: Run tests
+      - name: Test
         run: |
           cd lab5/sample-ci/frontend
           npm test
@@ -78,7 +82,7 @@ jobs:
           cd lab5/sample-ci/frontend
           npm run build
 
-      - name: Upload artifacts
+      - name: Upload frontend artifact
         uses: actions/upload-artifact@v4
         with:
           name: frontend
