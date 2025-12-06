@@ -10,9 +10,7 @@ jobs:
   backend:
     name: Backend (.NET)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: lab5/sample-ci/backend
+    # USUNĄŁEM defaults - teraz działamy z głównego katalogu, żeby się nie zgubił
     steps:
       - uses: actions/checkout@v4
       
@@ -20,30 +18,29 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      
+      # DEBUG: Pokaż co my tu w ogóle mamy, jakby znowu nie zadziałało
+      - name: Pokaż pliki (Debug)
+        run: find . -name "*.csproj"
 
-      # Dodałem ten krok - pokaże nam w logach jakie są pliki, jeśli znowu coś pójdzie nie tak
-      - name: Debug - List files
-        run: ls -R
-          
       - name: Restore dependencies
-        # Ta komenda sama znajdzie każdy plik .csproj w folderze i go przywróci
-        run: dotnet restore **/*.csproj
+        # Podajemy PEŁNĄ ścieżkę do pliku. Nie ma opcji, że nie trafi.
+        run: dotnet restore lab5/sample-ci/backend/ProductApi/ProductApi.csproj
 
       - name: Build
-        # Buduj każdy projekt Release, bez ponownego restore
-        run: dotnet build **/*.csproj --no-restore --configuration Release
+        run: dotnet build lab5/sample-ci/backend/ProductApi/ProductApi.csproj --no-restore --configuration Release
 
       - name: Test
-        # Testuj każdy projekt testowy
-        run: dotnet test **/*.Tests.csproj --no-build --configuration Release --logger trx
+        # Tu też pełna ścieżka do testów
+        run: dotnet test lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj --no-build --configuration Release --logger trx
 
       - name: Publish
-        # Publikuj główny projekt API
-        run: dotnet publish **/ProductApi.csproj --no-build --configuration Release --output ./publish
+        run: dotnet publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj --no-build --configuration Release --output ./publish
 
   frontend:
     name: Frontend (Node.js)
     runs-on: ubuntu-latest
+    # Frontend działał dobrze na starych ustawieniach, więc tu zostawiamy "wejście do folderu"
     defaults:
       run:
         working-directory: lab5/sample-ci/frontend
