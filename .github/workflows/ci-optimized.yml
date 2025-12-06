@@ -12,28 +12,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('lab5/sample-ci/backend/**/*.csproj') }}
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
+      - name: Restore dependencies
         run: dotnet restore lab5/sample-ci/backend/ProductApi/ProductApi.csproj
 
-      - name: Build
-        run: dotnet build --no-restore --configuration Release lab5/sample-ci/backend/ProductApi/ProductApi.csproj
+      - name: Build project
+        run: dotnet build --configuration Release lab5/sample-ci/backend/ProductApi/ProductApi.csproj
 
-      - name: Test
-        run: dotnet test --no-build --configuration Release --logger trx lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj
+      - name: Run tests
+        run: dotnet test --configuration Release lab5/sample-ci/backend/ProductApi.Tests/ProductApi.Tests.csproj
 
-      - name: Publish
-        run: dotnet publish --no-build --configuration Release --output ./publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj
+      - name: Publish project
+        run: dotnet publish --configuration Release --output ./publish lab5/sample-ci/backend/ProductApi/ProductApi.csproj
 
   frontend:
     name: Frontend (Node.js)
@@ -48,19 +42,11 @@ jobs:
           cache: 'npm'
           cache-dependency-path: lab5/sample-ci/frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Build, test and install dependencies
         run: |
           cd lab5/sample-ci/frontend
           npm ci
-
-      - name: Run tests
-        run: |
-          cd lab5/sample-ci/frontend
           npm test
-
-      - name: Build
-        run: |
-          cd lab5/sample-ci/frontend
           npm run build
 
       - name: Upload artifacts
