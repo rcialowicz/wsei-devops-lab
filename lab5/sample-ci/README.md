@@ -22,6 +22,7 @@ frontend/
 ## Lokalne uruchomienie
 
 ### Wymagania
+
 - .NET 8 SDK
 - Node.js 20
 
@@ -68,16 +69,20 @@ npm test
 ## CI/CD Pipeline
 
 ### Azure DevOps
+
 Pipeline zdefiniowany w: `azure-pipelines.yml`
 
 **Etapy:**
+
 1. **Backend Build** - Kompilacja, testy i publish aplikacji .NET
 2. **Frontend Build** - npm install, testy i build aplikacji Node.js
 
 ### GitHub Actions
+
 Workflow zdefiniowany w: `.github/workflows/ci.yml`
 
 **Jobs:**
+
 1. **backend** - Kompilacja, testy i publish .NET (równolegle)
 2. **frontend** - npm install, testy i build Node.js (równolegle)
 
