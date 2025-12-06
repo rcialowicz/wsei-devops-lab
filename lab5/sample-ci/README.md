@@ -105,3 +105,4 @@ curl -X DELETE http://localhost:5000/api/products/1
 3. **Performance tests** - testy obciążeniowe (k6, JMeter)
 4. **Deployment** - automatyczny deploy do Azure App Service
 # Lab 5 - CI Optimization
+# Lab 5 - CI Optimization
