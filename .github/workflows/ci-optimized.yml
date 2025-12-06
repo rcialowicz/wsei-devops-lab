@@ -26,6 +26,8 @@ jobs:
       run: |
         cd lab5/sample-ci/backend/ProductApi
         dotnet restore
+        cd ../ProductApi.Tests
+        dotnet restore
 
     - name: Build
       run: |
