@@ -106,3 +106,5 @@ curl -X DELETE http://localhost:5000/api/products/1
 4. **Deployment** - automatyczny deploy do Azure App Service
 
 # Lab 5 - CI Optimization
+
+test
