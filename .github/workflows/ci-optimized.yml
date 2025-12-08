@@ -2,7 +2,7 @@ name: CI-OPTIMIZED
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/frontend-ci]
 
 jobs:
   backend:
