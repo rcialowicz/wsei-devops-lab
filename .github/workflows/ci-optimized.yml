@@ -59,6 +59,22 @@ jobs:
           name: backend
           path: lab5/sample-ci/backend/ProductApi/publish
 
+  frontend-install:
+    name: Frontend - Install
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: |
+        cd lab5/sample-ci/frontend
+        npm install
+
   frontend-test:
     name: Frontend - Test
     runs-on: ubuntu-latest
