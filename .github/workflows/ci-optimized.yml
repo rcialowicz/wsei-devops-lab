@@ -50,7 +50,7 @@ jobs:
       - name: Publish
         run: |
           cd lab5/sample-ci/backend/ProductApi
-          dotnet --no-build publish --configuration Release --output ./publish
+          dotnet publish --no-build --configuration Release --output ./publish
 
       # Upload artifact
       - name: Upload artifacts
