@@ -44,7 +44,7 @@ jobs:
       - name: Test
         run: |
           cd lab5/sample-ci/backend/ProductApi.Tests
-          dotnet --no-build test --configuration Release --logger trx
+          dotnet test --no-build --configuration Release --logger trx
 
       # Publish
       - name: Publish
