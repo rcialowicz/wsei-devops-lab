@@ -21,13 +21,13 @@ W tym laboratorium nauczysz się:
 
 ### 0.1 Fork repozytorium GitHub
 
-1. Przejdź do: `https://github.com/rcialowicz/wsei-devops-lab-public`
+1. Przejdź do: `https://github.com/rcialowicz/wsei-devops-lab`
 2. Kliknij **Fork** (prawy górny róg)
 3. Sklonuj swojego forka:
 
 ```powershell
-git clone https://github.com/<twoja-nazwa>/wsei-devops-lab-public.git
-cd wsei-devops-lab-public
+git clone https://github.com/<twoja-nazwa>/wsei-devops-lab.git
+cd wsei-devops-lab
 ```
 
 ### 0.2 Zaloguj się do Azure CLI
