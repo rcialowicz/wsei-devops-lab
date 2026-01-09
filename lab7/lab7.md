@@ -36,7 +36,7 @@ az account set --subscription "<your-subscription-id>"
 ### 0.2 Utwórz Resource Group
 
 ```powershell
-$NAZWISKO = "kowalski"  # ZMIEŃ TO!
+$NAZWISKO = "kowalski"  # ZMIEŃ
 $RESOURCE_GROUP = "rg-$NAZWISKO-lab7"
 $LOCATION = "germanywestcentral"
 
@@ -78,14 +78,6 @@ $CONNECTION_STRING = az monitor app-insights component show `
 Write-Host "Application Insights Connection String:" -ForegroundColor Green
 Write-Host $CONNECTION_STRING
 
-# Zapisz go - będziesz potrzebować!
-$CONNECTION_STRING | Out-File -FilePath "appi-connection-string.txt"
-```
-
-**📝 Zapisz Connection String:**
-```powershell
-# Connection String został zapisany w pliku
-Get-Content appi-connection-string.txt
 ```
 
 ---
@@ -102,10 +94,10 @@ Prowadzący poda:
 - **ACR Password:** hasło do registry
 
 ```powershell
-# Ustaw zmienne (ZMIEŃ wartości na te podane przez prowadzącego!)
-$ACR_NAME = "acrrcilab7"  # Podany przez prowadzącego
+# Ustaw zmienne (ZMIEŃ wartości na te podane przez prowadzącego)
+$ACR_NAME = "acrrcilab7"
 $DOCKER_IMAGE = "$ACR_NAME.azurecr.io/monitoring-demo:v1"
-$ACR_PASSWORD = "<haslo-podane-przez-prowadzacego>"  # Podane przez prowadzącego
+$ACR_PASSWORD = "<haslo-podane-przez-prowadzacego>"
 ```
 
 ### 1.2 Utwórz App Service Plan (F1 - Free Tier)
@@ -151,7 +143,6 @@ az webapp config appsettings set `
   --resource-group $RESOURCE_GROUP `
   --settings "ApplicationInsights__ConnectionString=$CONNECTION_STRING"
 
-# Ustaw port (aplikacja nasłuchuje na 8080)
 az webapp config appsettings set `
   --name $APP_NAME `
   --resource-group $RESOURCE_GROUP `
@@ -169,9 +160,6 @@ $APP_URL = az webapp show `
 Write-Host "`n✅ Application deployed!" -ForegroundColor Green
 Write-Host "URL: https://$APP_URL" -ForegroundColor Cyan
 Write-Host "Swagger: https://$APP_URL/swagger" -ForegroundColor Cyan
-
-# Zapisz URL do pliku
-$APP_URL | Out-File -FilePath "app-url.txt"
 
 # Test health endpoint
 Write-Host "\nTesting health endpoint..." -ForegroundColor Yellow
@@ -236,9 +224,6 @@ Invoke-WebRequest "https://$APP_URL/health" -UseBasicParsing
 ### 3.1 Podstawowe testy endpointów
 
 ```powershell
-# Jeśli nie masz zmiennej $APP_URL:
-# $APP_URL = Get-Content "app-url.txt"
-
 # 1. Health check
 Invoke-WebRequest "https://$APP_URL/health" -UseBasicParsing
 
@@ -325,7 +310,7 @@ Write-Host "`nCreated 5 failed orders (out of stock)" -ForegroundColor Green
 ### 3.4 Generowanie błędów (dla alertów)
 
 ```powershell
-# Wygeneruj kilka exceptions
+# Wygeneruj kilka wyjątków
 1..10 | ForEach-Object {
     Write-Host "Triggering error $_..."
     try {
@@ -522,6 +507,8 @@ requests
 
 ### 6.2 Utwórz Alert na wysoki Error Rate
 
+**UWAGA:** Zastąp `TWOJ_EMAIL@example.com` prawdziwym adresem email
+
 ```powershell
 # Pobierz Resource ID Application Insights
 $APPI_ID = az monitor app-insights component show `
@@ -549,8 +536,6 @@ az monitor scheduled-query create `
   --severity 2 `
   --action-groups "/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP/providers/microsoft.insights/actionGroups/ag-$NAZWISKO-lab7"
 ```
-
-**UWAGA:** Zastąp `TWOJ_EMAIL@example.com` prawdziwym adresem email
 
 ### 6.3 Wyzwól alert (test)
 
@@ -603,6 +588,9 @@ Write-Host "Alert should trigger in ~5 minutes. Check your email!" -ForegroundCo
    - Opcjonalnie: triggered alert w emailu
 
 3. **Screenshot Grafana Dashboard** (opcjonalnie):
+
+lub screenshot pokazujący ostatnie zrobione ćwiczenie.
+
 ---
 
 ## Cleanup
