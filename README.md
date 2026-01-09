@@ -12,4 +12,4 @@ Znajdziesz tutaj przykładowe zadania krok po kroku, skrypty PowerShell oraz kr�
 4. 22/11/2025 — Docker Compose - [lab4.md](lab4/lab4.md)
 5. 06/12/2025 — Continuous Integration (CI) - [lab5.md](lab5/lab5.md)
 6. 20/12/2025 — Continuous Delivery (CD) - [lab6.md](lab6/lab6.md)
-7. 10/01/2026 — Logging i Monitoring
+7. 10/01/2026 — Monitoring - [lab7.md](lab7/lab7.md)
