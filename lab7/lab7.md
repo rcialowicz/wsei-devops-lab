@@ -195,9 +195,9 @@ Invoke-WebRequest "https://$APP_URL/health" -UseBasicParsing
 
 💡 **Zadanie:** Otwórz **Live Metrics** i zostaw otwarte w osobnej karcie - zobaczysz dane w czasie rzeczywistym!
 
-### 2.3 Skonfiguruj Transaction search
+### 2.3 Skonfiguruj Search
 
-1. W Application Insights wybierz **Transaction search** (w sekcji Investigate)
+1. W Application Insights wybierz **Search** (w sekcji Investigate)
 2. Ustaw time range: **Last 30 minutes**
 3. Zobaczysz:
    - **Requests** - HTTP calls
